@@ -1,0 +1,41 @@
+
+{
+"main":"controller",
+"log_xmit": true,
+"controller":"controller",
+
+"defaults": { 
+    "q_in_size":5,
+    "q_out_size":5,
+    "ir_remote": "ir_remote"
+    },
+
+"services": [
+    {"name":"controller", "module":"service_controller",   "q_out_size":10,
+        "startup_focus":"menu",  "menu":"menu" },
+         
+    {"name":"menu",       "module":"service_menu",     "initial_app":"timer",  
+        "menu":["menu", "dht11", "lcd_off", "mem_use", "timer", "clock"]
+        },
+        
+    {"name":"lcd",        "module":"service_lcd",    "customer_fonts":"json file name" },
+        
+    {"name":"dht11",      "module":"service_dht11" },
+        
+    {"name":"distance",   "module":"service_sonic",  "todo": "remove this? or update it?" },
+        
+    {"name":"log",        "module":"service_print",  "q_in_size":1000,  "print_log":1,
+      "todo": "make a log to disk version, or have that as an option?" },
+        
+    {"name":"ir_remote",  "module":"service_ir",     "key_map":"ir_mapping_koobook.json" }, 
+    
+    {"name":"lcd_off",    "module":"service_lcd_off"   },
+    
+    {"name":"mem_use",    "module":"service_mem_use"   },
+    
+    {"name":"timer",      "module":"service_timer"   },
+        
+    {"name":"clock",      "module":"service_clock"   }
+        
+    ]
+}

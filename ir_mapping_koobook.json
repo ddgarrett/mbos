@@ -1,0 +1,31 @@
+{
+    "device":"koobook Infrared IR Wireless Remote Control Sensor Module Kits for Arduino",
+    "comment":"1C=OK key",
+
+    "hex_utf8_map": {
+
+        "1c": "",
+        "08": "⏴",
+        "5a": "⏵",
+        "18": "⏶",
+        "52": "⏷",
+
+        "19": "0",
+        "45": "1",
+        "46": "2",
+        "47": "3",
+        "44": "4",
+        "40": "5",
+        "43": "6",
+        "07": "7",
+        "15": "8",
+        "09": "9",
+
+        "16": "*",
+        "0d": "#"
+
+    }
+    
+    
+    
+    }

@@ -1,0 +1,33 @@
+{
+    "device":"From Elegoo Kit - DFRobot IR Remote Kit for Arduino - DFR0107",
+    "comment":"Came with Elegoo Kit but made by DFRobot",
+
+    "hex_utf8_map": {
+
+        "45": "⭘",
+        "44": "⏮",
+        "43": "⏭",
+        "40": "⏯",
+        "09": "⏶",
+        "07": "⏷",
+        
+        "46": "🔊", "name_46": "volume up",
+        "19": "🔉", "name_19": "volume down",
+        
+
+        "16": "0",
+        "0c": "1",
+        "18": "2",
+        "5e": "3",
+        "08": "4",
+        "1c": "5",
+        "5a": "6",
+        "42": "7",
+        "52": "8",
+        "4a": "9"
+
+    }
+    
+    
+    
+    }
