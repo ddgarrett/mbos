@@ -18,7 +18,7 @@
         "menu":["menu", "dht11", "lcd_off", "mem_use", "timer", "clock"]
         },
         
-    {"name":"lcd",        "module":"service_lcd",    "customer_fonts":"json file name" },
+    {"name":"lcd",        "module":"service_lcd_v02",  "customer_fonts":"json file name" },
         
     {"name":"dht11",      "module":"service_dht11" },
         
