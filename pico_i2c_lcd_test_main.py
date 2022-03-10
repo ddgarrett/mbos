@@ -36,13 +36,19 @@ def test_main():
     while True:
         lcd.clear()
         time = utime.localtime()
+        lcd.putstr("{year:>04d}/{month:>02d}/{day:>02d}\n {HH:>02d}:{MM:>02d}:{SS:>02d}".format(
+            year=time[0], month=time[1], day=time[2],
+            HH=time[3], MM=time[4], SS=time[5]))
+        
+        """
         lcd.putstr("{year:>04d}/{month:>02d}/{day:>02d}".format(
             year=time[0], month=time[1], day=time[2]))
         lcd.move_to(0,1)
         lcd.putstr("{HH:>02d}:{MM:>02d}:{SS:>02d}".format(
             HH=time[3], MM=time[4], SS=time[5]))
-        
         """
+        
+
         if count % 10 == 0:
             print("Turning cursor on")
             lcd.show_cursor()
@@ -59,6 +65,8 @@ def test_main():
         if count % 10 == 4:
             print("Turning backlight off")
             lcd.backlight_off()
+            
+
         if count % 10 == 5:
             print("Turning backlight on")
             lcd.backlight_on()
@@ -69,6 +77,7 @@ def test_main():
             print("Turning display on")
             lcd.display_on()
             
+
         if count % 10 == 8:
             print("Filling display, "+str(I2C_NUM_ROWS) + ",  "+ str(I2C_NUM_COLS))
             lcd.clear()
@@ -77,7 +86,6 @@ def test_main():
                 string += chr(x)
             lcd.putstr(string)
             
-        """
         
         count += 1
         utime.sleep(2)
