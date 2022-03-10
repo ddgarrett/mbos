@@ -16,14 +16,18 @@ class ModuleService(Service):
 
     async def gain_focus(self):
         await super().gain_focus()
-        await self.turn_off_lcd()
+        await self.set_lcd_backlight(0)
         
-    async def turn_off_lcd(self):
+    async def set_lcd_backlight(self, value):
         msg = xmit_lcd.XmitLcd(fr=self.name)
         msg.clear_screen()
-        msg.set_backlight(0)
+        msg.set_backlight(value)
         await self.put_to_output_q(msg)
         
+        
+    async def lose_focus(self):
+        await self.set_lcd_backlight(1)
+        await super().lose_focus()
 
 
 
