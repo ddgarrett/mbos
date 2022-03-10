@@ -11,6 +11,12 @@ class LcdApi:
     # The following constant names were lifted from the avrlib lcd.h header file,
     # with bit numbers changed to bit masks.
     
+    #
+    # Modified: Mar 9, 2022  by: D. Garrett
+    # Comment out setting of self.implied_newline
+    # Once turned on it was never reset, disabling \n capability
+    #
+    
     # HD44780 LCD controller command set
     LCD_CLR             = 0x01  # DB0: clear display
     LCD_HOME            = 0x02  # DB1: return to home position
@@ -139,7 +145,10 @@ class LcdApi:
         if self.cursor_x >= self.num_columns:
             self.cursor_x = 0
             self.cursor_y += 1
-            self.implied_newline = (char != '\n')
+            # don't turn this on
+            # once on, it is never reset unless the
+            # lcd is reinitialized
+            # self.implied_newline = (char != '\n')
         if self.cursor_y >= self.num_lines:
             self.cursor_y = 0
         self.move_to(self.cursor_x, self.cursor_y)
