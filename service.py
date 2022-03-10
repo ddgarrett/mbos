@@ -156,10 +156,6 @@ class Service:
             xmit.set_backlight(1)
             await self.put_to_output_q(xmit)
             await uasyncio.sleep(blink_rate)
-
-            
-            
-            
         
     # Loop that does not return until the service has gained focus
     async def await_gain_focus(self):
