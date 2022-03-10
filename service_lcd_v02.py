@@ -4,6 +4,8 @@
     Processes items in the input queue
     translating them to various commands related to the LCD.
     
+    V02 uses a different driver which has more capabilities.
+    
     See xmit_lcd.py for how to build input messages for this service.
     
     Accepts following commands:
@@ -70,10 +72,28 @@ class ModuleService(Service):
         
         self.lcd = I2cLcd(i2c, i2c_addr, lcd_row_cnt, lcd_col_cnt)
         
-        self.backlight_on = True
+        self.backlight_on   = True
+        self.blink_task     = None
+        self.blink_interval = 0
 
+    # run forever, but only blink backlight if
+    # blink_interval > 0
+    async def blink_lcd(self):
+        while True:
+            while self.blink_interval > 0:
+                self.set_backlight(False)
+                await uasyncio.sleep_ms(int(self.blink_interval * 1000))
+                self.set_backlight(True)
+                await uasyncio.sleep_ms(int(self.blink_interval * 1000))
+                
+            await uasyncio.sleep_ms(500)
+        
     async def run(self):
         q = self.get_input_queue()
+        
+        # Start the blink coroutine.
+        # It won't do anything until blink_interval is set
+        self.blink_task = uasyncio.create_task(self.blink_lcd())
         
         while True:
             if not q.empty():
@@ -105,14 +125,13 @@ class ModuleService(Service):
         elif isinstance(command,dict):
             for key in command:
                 if key == 'msg':
-                    if not self.backlight_on:
-                        self.set_backlight(1)
-                        
                     self.lcd.putstr(command[key])
                 elif key == 'cursor':
                     self.set_cursor(command[key])
                 elif key == 'backlight':
                     self.set_backlight(command[key])
+                elif key == 'blink_backlight':
+                    self.blink_interval = command[key]
                 else:
                     # log error in dictionary command
                     pass

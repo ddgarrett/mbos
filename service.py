@@ -138,25 +138,7 @@ class Service:
     async def rexmit(self, xmit):
         xmit.set_to(self.CTL_SERVICE_NAME)
         await self.get_output_queue().put(xmit)
-        
-    # blink the LCD at a given rate
-    # To start, code:  uasyncio.create_task(self.blink_lcd(n))
-    # where n is the blink rate.
-    # To change the blink rate set self.blink_rate.
-    # To stop the blinking, code: self.blink_rate = 0
-    async def blink_lcd(self, blink_rate):
-        self.blink_rate = blink_rate
-        while blink_rate > 0:
-            xmit = xmit_lcd.XmitLcd(fr=self.name)
-            xmit.set_backlight(0)
-            await self.put_to_output_q(xmit)
-            await uasyncio.sleep(blink_rate)
-            
-            xmit = xmit_lcd.XmitLcd(fr=self.name)
-            xmit.set_backlight(1)
-            await self.put_to_output_q(xmit)
-            await uasyncio.sleep(blink_rate)
-        
+                
     # Loop that does not return until the service has gained focus
     async def await_gain_focus(self):
         

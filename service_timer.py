@@ -44,6 +44,7 @@ class ModuleService(Service):
             await self.define_and_run_timers(timer_cnt)
             await uasyncio.sleep_ms(0)
         
+    # loop until we get a number between 1 and 9
     async def get_timer_cnt(self):
         async def prompt_timer_cnt():
             await self.prompt("Number\nof timers?")
@@ -140,6 +141,13 @@ class ModuleService(Service):
     async def run_timer(self, timer, timer_tick_start, running_ticks_start):
         
         timer_ms = self.calc_timer_ticks_ms(timer)
+        
+        # test blink_lcd
+        # uasyncio.create_task(self.blink_lcd(.5))
+        xmit = xmit_lcd.XmitLcd(fr=self.name)
+        xmit.blink_backlight(.5)
+        await self.put_to_output_q(xmit)
+        
          
         while True:
             await uasyncio.sleep_ms(1000)

@@ -44,4 +44,9 @@ class XmitLcd(XmitMsg):
             self.msg.append({'backlight':1})
             
         return self
+    
+    def blink_backlight(self,interval):
+        x = interval * 1000  # cause exception if we can't multiply interval by 1,000
+        self.msg.append({'blink_backlight':interval})
+            
         
