@@ -28,18 +28,6 @@ from service import Service
 import queue
 import uasyncio
 
-# degree symbol
-degreeSymbol = [
-0b00110,
-0b01001,
-0b01001,
-0b00110,
-0b00000,
-0b00000,
-0b00000,
-0b00000
-]
-
 # All services classes are named ModuleService
 class ModuleService(Service):
 

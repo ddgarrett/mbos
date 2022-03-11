@@ -67,7 +67,7 @@ class ModuleService(Service):
         self.blink_interval = 0
         
         # Add any custom characters
-        # Any customer characters must have a byte array
+        # Any custom characters must have a byte array
         # defined in utf8_char.py in the dictionary CUSTOM_CHARACTERS
         custom_char = self.get_parm("custom_char","")
         for char in custom_char:
