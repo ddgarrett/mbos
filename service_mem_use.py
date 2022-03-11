@@ -21,7 +21,7 @@ class ModuleService(Service):
 
     async def show_mem_use(self):
         msg = xmit_lcd.XmitLcd(fr=self.name)
-        msg.clear_screen().set_msg(self.df() + "\n" + self.free())
+        msg.clear_screen().set_msg("⏶ " + self.df() + "\n⏷ " + self.free())
         await self.put_to_output_q(msg)    
 
     # disk free space

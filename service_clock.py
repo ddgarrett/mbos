@@ -63,10 +63,10 @@ class ModuleService(Service):
         
             time = utime.localtime()
             
-            date_str = "{month:>02d}/{day:>02d}/{year:>04d}      ".format(
+            date_str = "⏶ {month:>02d}/{day:>02d}/{year:>04d}      ".format(
                         year=time[0], month=time[1], day=time[2])
             
-            time_str = "{HH:>02d}:{MM:>02d}:{SS:>02d}     ".format(
+            time_str = "⏷ {HH:>02d}:{MM:>02d}:{SS:>02d}     ".format(
                         HH=time[3], MM=time[4], SS=time[5])
             
             xmit = xmit_lcd.XmitLcd(fr=self.name)

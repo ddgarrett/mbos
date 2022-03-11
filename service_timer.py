@@ -47,14 +47,14 @@ class ModuleService(Service):
     # loop until we get a number between 1 and 9
     async def get_timer_cnt(self):
         async def prompt_timer_cnt():
-            await self.prompt("Number\nof timers?")
+            await self.prompt("⏶ Number\n⏷ of timers?")
             
         await prompt_timer_cnt()
         while True:
             xmit = await self.await_ir_input(gain_focus_func=prompt_timer_cnt)
             msg = xmit.get_msg()
             if msg < "1" or msg > "9":
-                await self.prompt("Enter\n 1 thru 9")
+                await self.prompt("⏶ Enter\n 1 thru 9\n⏷")
             else:
                 return int(msg)
             

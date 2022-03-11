@@ -147,7 +147,7 @@ class ModuleService(Service):
         
     # set LCD temp/humidity labels
     async def init_lcd(self):
-        msg = "Select Function\nUp or Down arrow"
+        msg = "⏶ Up/Down Arrow\n⏷ to Select Func"
         xmit = xmit_lcd.XmitLcd(fr=self.name)
         xmit.clear_screen().set_msg(msg)
         await self.put_to_output_q(xmit)
