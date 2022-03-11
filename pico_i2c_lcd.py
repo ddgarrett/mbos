@@ -4,6 +4,26 @@ import gc
 from lcd_api import LcdApi
 from machine import I2C
 
+"""
+    Modified: Mar 11, 2022   By: D. Garrett
+    Add custom characters that are identified by UTF-8 character.
+    Similar to custom_char(location, charmap) but identifies a byte_map
+    by it's utf8 character instead of a 0 - 7 location.
+    
+    Under the hood it automatically assigns a 0 - 7 slot. If more than 8
+    special characters are defined will reuse the 0th slot, then 1st, etc.
+    
+    To use
+    1. Call  def_special_char(utf8_char,charmap)
+       utf8_char = the utf8 special character
+       charmap   = the 5x8 bit map
+       
+    If the character is then detected in a putchar(char), it will then be
+    converted to the 0 - 7 custom character slot.
+       
+
+"""
+
 # PCF8574 pin definitions
 MASK_RS = 0x01       # P0
 MASK_RW = 0x02       # P1
@@ -36,6 +56,11 @@ class I2cLcd(LcdApi):
         if num_lines > 1:
             cmd |= self.LCD_FUNCTION_2LINES
         self.hal_write_command(cmd)
+        
+        # added  Mar 11, 2022   By: D. Garrett
+        self.special_char = [chr(0)]*8
+        self.special_char_next_slot = 0
+        
         gc.collect()
 
     def hal_write_init_nibble(self, nibble):
@@ -84,3 +109,24 @@ class I2cLcd(LcdApi):
         self.i2c.writeto(self.i2c_addr, bytes([byte | MASK_E]))
         self.i2c.writeto(self.i2c_addr, bytes([byte]))
         gc.collect()
+
+    ##### Code below  added Mar 11, 2022   By: D. Garrett
+    ##### Define Special Characters
+        
+    def def_special_char(self,utf8_char,charmap):
+        super().custom_char(self.special_char_next_slot, charmap)
+        self.special_char[self.special_char_next_slot] = utf8_char
+        self.special_char_next_slot += 1
+        if self.special_char_next_slot > 7:
+            self.special_char_next_slot = 0
+            
+    # Override superclass putchar
+    # If char is a special character
+    # replace it with the slot number
+    def putchar(self, char):
+        if char in self.special_char:
+            i = self.special_char.index(char)
+            super().putchar(chr(i))
+        else:
+            super().putchar(char)
+            

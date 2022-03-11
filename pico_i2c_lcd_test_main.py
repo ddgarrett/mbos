@@ -5,6 +5,8 @@ from machine import I2C
 # from lcd_api import LcdApi
 from pico_i2c_lcd import I2cLcd
 
+import utf8_char
+
 I2C_ADDR     = 0x27
 I2C_NUM_ROWS = 2
 I2C_NUM_COLS = 16
@@ -21,18 +23,96 @@ degreeSymbol = [
 0b00000
 ]
 
+reverseBack = [
+  0b00010,
+  0b00110,
+  0b01110,
+  0b11110,
+  0b01110,
+  0b00110,
+  0b00010,
+  0b00000
+]
+
+forwardNextPlay = [
+  0b01000,
+  0b01100,
+  0b01110,
+  0b01111,
+  0b01110,
+  0b01100,
+  0b01000,
+  0b00000
+]
+
+KEY_INCREASE = [
+    0b00000,
+    0b00000,
+    0b00100,
+    0b01110,
+    0b11111,
+    0b00000,
+    0b00000,
+    0b00000
+    ]
+
+KEY_DECREASE = [
+    0b00000,
+    0b00000,
+    0b11111,    
+    0b01110,
+    0b00100,
+    0b00000,
+    0b00000,
+    0b00000
+    ]
+
+
+
+
 def test_main():
     #Test function for verifying basic functionality
     print("Running test_main")
     i2c = I2C(0, sda=machine.Pin(20), scl=machine.Pin(21), freq=400000)
-    lcd = I2cLcd(i2c, I2C_ADDR, I2C_NUM_ROWS, I2C_NUM_COLS)    
+    lcd = I2cLcd(i2c, I2C_ADDR, I2C_NUM_ROWS, I2C_NUM_COLS)
     
-    lcd.custom_char(0x01, degreeSymbol)
+    custom_char = "°⏴⏵⏶⏷"
     
-    lcd.putstr("It Works!"+chr(1))
+    """
+    custom_str = ""
+    for i in range(len(custom_char)):
+        char = custom_char[i]
+        if char in utf8_char.CUSTOM_CHARACTERS:
+            b_array = utf8_char.CUSTOM_CHARACTERS[char]
+            lcd.custom_char(i,b_array)
+            custom_str = custom_str + chr(i)
+        i = i + 1
+    """
+    
+    for char in custom_char:
+        if char in utf8_char.CUSTOM_CHARACTERS:
+            b_array = utf8_char.CUSTOM_CHARACTERS[char]
+            lcd.def_special_char(char,b_array)
+    
+    """
+    lcd.custom_char(0x00, degreeSymbol)
+    lcd.custom_char(0x01, reverseBack)
+    lcd.custom_char(0x02, forwardNextPlay)
+    lcd.custom_char(0x03, KEY_INCREASE)
+    lcd.custom_char(0x04, KEY_DECREASE)
+    """
+    
+    # lcd.putstr("It Works!" + custom_str)  #+custom_char)
+    lcd.putstr("It Works!" + custom_char) 
+    
+    # more()
+    
+def more():
     utime.sleep(2)
     lcd.clear()
     count = 0
+
+
     while True:
         lcd.clear()
         time = utime.localtime()

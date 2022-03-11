@@ -30,20 +30,10 @@ from machine import Pin
 from machine import I2C
 from pico_i2c_lcd import I2cLcd
 
+import utf8_char
+
 import queue
 import uasyncio
-
-# degree symbol
-degreeSymbol = [
-0b00110,
-0b01001,
-0b01001,
-0b00110,
-0b00000,
-0b00000,
-0b00000,
-0b00000
-]
 
 # All services classes are named ModuleService
 class ModuleService(Service):
@@ -75,6 +65,15 @@ class ModuleService(Service):
         self.backlight_on   = True
         self.blink_task     = None
         self.blink_interval = 0
+        
+        # Add any custom characters
+        # Any customer characters must have a byte array
+        # defined in utf8_char.py in the dictionary CUSTOM_CHARACTERS
+        custom_char = self.get_parm("custom_char","")
+        for char in custom_char:
+            if char in utf8_char.CUSTOM_CHARACTERS:
+                b_array = utf8_char.CUSTOM_CHARACTERS[char]
+                self.lcd.def_special_char(char,b_array)
 
     # run forever, but only blink backlight if
     # blink_interval > 0

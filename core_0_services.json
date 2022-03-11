@@ -14,11 +14,11 @@
     {"name":"controller", "module":"service_controller",   "q_out_size":10,
         "startup_focus":"menu",  "menu":"menu" },
          
-    {"name":"menu",       "module":"service_menu",     "initial_app":"timer",  
-        "menu":["menu", "dht11", "lcd_off", "mem_use", "timer", "clock"]
+    {"name":"menu",       "module":"service_menu",     "initial_app":"dht11",  
+        "menu":[ "dht11", "lcd_off", "mem_use", "timer", "clock"]
         },
         
-    {"name":"lcd",        "module":"service_lcd_v02",  "customer_fonts":"json file name" },
+    {"name":"lcd",        "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
         
     {"name":"dht11",      "module":"service_dht11" },
         

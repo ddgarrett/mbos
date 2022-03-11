@@ -27,6 +27,8 @@ KEY_OK                = ""
 KEY_VOLUME_UP         = "🔊"
 KEY_VOLUME_DOWN       = "🔉"
 
+KEY_DEGREES_SYMBOL    = "°"
+
 
 # Keys that scroll up and down between apps
 KEYS_NAVIGATE = [KEY_INCREASE, KEY_DECREASE]
@@ -49,4 +51,61 @@ KEYS_NON_ZERO_NUMERIC = [
     KEY_OK]
 
 
+CUSTOM_CHARACTERS = {
+    KEY_DEGREES_SYMBOL : [
+        0b01100,
+        0b10010,
+        0b10010,
+        0b01100,
+        0b00000,
+        0b00000,
+        0b00000,
+        0b00000
+    ],
+    
+    KEY_REVERSE_BACK : [
+        0b00010,
+        0b00110,
+        0b01110,
+        0b11110,
+        0b01110,
+        0b00110,
+        0b00010,
+        0b00000
+    ],
+
+    KEY_FORWARD_NEXT_PLAY : [
+        0b01000,
+        0b01100,
+        0b01110,
+        0b01111,
+        0b01110,
+        0b01100,
+        0b01000,
+        0b00000
+    ],
+    
+    KEY_INCREASE : [
+        0b00000,
+        0b00000,
+        0b00100,
+        0b01110,
+        0b11111,
+        0b00000,
+        0b00000,
+        0b00000
+    ],
+
+    KEY_DECREASE : [
+        0b00000,
+        0b00000,
+        0b11111,    
+        0b01110,
+        0b00100,
+        0b00000,
+        0b00000,
+        0b00000 
+    ]
+
+}
 

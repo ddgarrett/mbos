@@ -84,7 +84,7 @@ class ModuleService(Service):
     # set LCD temp/humidity labels
     async def init_lcd(self):
         msg = xmit_lcd.XmitLcd(fr=self.name)
-        msg.clear_screen().set_msg("Temp:\nHumidity:")
+        msg.clear_screen().set_msg("⏶ Temp:\n⏷ Humidity:")
         await self.put_to_output_q(msg)
         # await self.log_msg("Sent LCD Initialize Message")
         
@@ -108,8 +108,8 @@ class ModuleService(Service):
             humidity = humidity + 10
             
             msg = xmit_lcd.XmitLcd(fr=self.name)
-            msg.set_cursor(6,0).set_msg("{: .1f} F".format(temp))
-            msg.set_cursor(10,1).set_msg("{:.0f}%".format(humidity))
+            msg.set_cursor(8,0).set_msg("{: .1f}°F".format(temp))
+            msg.set_cursor(12,1).set_msg("{:.0f}%".format(humidity))
             
             await self.put_to_output_q(msg)
             
