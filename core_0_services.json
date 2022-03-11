@@ -16,8 +16,8 @@
     {"name":"controller", "module":"service_controller",   "q_out_size":10,
         "startup_focus":"menu",  "menu":"menu" },
          
-    {"name":"menu",       "module":"service_menu",     "initial_app":"dht11",  
-        "menu":[ "menu", "dht11", "lcd_off", "mem_use", "timer", "clock"]
+    {"name":"menu",       "module":"service_menu",     "initial_app":"test",  
+        "menu":[ "menu", "dht11", "lcd_off", "mem_use", "timer", "clock", "test"]
         },
         
     {"name":"lcd",        "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
@@ -30,14 +30,11 @@
       "todo": "make a log to disk version, or have that as an option?" },
         
     {"name":"ir_remote",  "module":"service_ir",     "key_map":"ir_mapping_koobook.json" }, 
-    
     {"name":"lcd_off",    "module":"service_lcd_off"   },
-    
     {"name":"mem_use",    "module":"service_mem_use"   },
-    
-    {"name":"timer",      "module":"service_timer"   },
-        
-    {"name":"clock",      "module":"service_clock"   }
+    {"name":"timer",      "module":"service_timer"   }, 
+    {"name":"clock",      "module":"service_clock"   },
+    {"name":"test",       "module":"service_test"   }
         
     ]
 }

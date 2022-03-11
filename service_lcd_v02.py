@@ -30,7 +30,9 @@ from machine import Pin
 from machine import I2C
 from pico_i2c_lcd import I2cLcd
 
+
 import utf8_char
+import xmit_lcd
 
 import queue
 import uasyncio
@@ -75,6 +77,23 @@ class ModuleService(Service):
                 b_array = utf8_char.CUSTOM_CHARACTERS[char]
                 self.lcd.def_special_char(char,b_array)
 
+        # dictionary to execute commands
+        self.cmd_lookup = {
+            xmit_lcd.CMD_CLEAR_SCREEN : self.lcd.clear,
+
+            xmit_lcd.CMD_CURSOR_ON    : self.lcd.show_cursor,
+            xmit_lcd.CMD_CURSOR_OFF   : self.lcd.hide_cursor,
+
+            xmit_lcd.CMD_BLINK_CURSOR_ON  : self.lcd.blink_cursor_on,
+            xmit_lcd.CMD_BLINK_CURSOR_OFF : self.lcd.blink_cursor_off,
+
+            xmit_lcd.CMD_BACKLIGHT_ON  : self.lcd.backlight_on,
+            xmit_lcd.CMD_BACKLIGHT_OFF : self.lcd.backlight_off,
+
+            xmit_lcd.CMD_DISPLAY_ON  : self.lcd.display_on,
+            xmit_lcd.CMD_DISPLAY_OFF : self.lcd.display_off
+        }
+        
     # run forever, but only blink backlight if
     # blink_interval > 0
     async def blink_lcd(self):
@@ -116,8 +135,8 @@ class ModuleService(Service):
             
     def process_command(self, command):
         if isinstance(command,str):
-            if command == 'clear':
-                self.lcd.clear()
+            if command in self.cmd_lookup:
+                self.cmd_lookup[command]()
             else:
                 # log error: invalid command?
                 pass
