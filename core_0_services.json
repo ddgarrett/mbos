@@ -34,7 +34,7 @@
     {"name":"mem_use",    "module":"service_mem_use"   },
     {"name":"timer",      "module":"service_timer"   }, 
     {"name":"clock",      "module":"service_clock"   },
-    {"name":"test",       "module":"service_test"   }
+    {"name":"test",       "module":"service_test_lcd"   }
         
     ]
 }
