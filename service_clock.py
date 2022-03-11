@@ -19,6 +19,8 @@ import xmit_lcd
 # All services classes are named ModuleService
 class ModuleService(Service):
     
+    WEEK_DAYS = ['Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', ]
+    
     def __init__(self, svc_parms):
         super().__init__(svc_parms)
         self.display_time_task = None
@@ -62,9 +64,10 @@ class ModuleService(Service):
         while True:
         
             time = utime.localtime()
+            weekday = self.WEEK_DAYS[time[6]]
             
-            date_str = "⏶ {month:>02d}/{day:>02d}/{year:>04d}      ".format(
-                        year=time[0], month=time[1], day=time[2])
+            date_str = "⏶ {month:>02d}/{day:>02d}/{year:>02d} {dow}".format(
+                        year=time[0]%100, month=time[1], day=time[2], dow=weekday)
             
             time_str = "⏷ {HH:>02d}:{MM:>02d}:{SS:>02d}     ".format(
                         HH=time[3], MM=time[4], SS=time[5])
