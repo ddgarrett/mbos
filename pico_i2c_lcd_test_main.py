@@ -8,8 +8,8 @@ from pico_i2c_lcd import I2cLcd
 import utf8_char
 
 I2C_ADDR     = 0x27
-I2C_NUM_ROWS = 2
-I2C_NUM_COLS = 16
+I2C_NUM_ROWS = 4 # 2
+I2C_NUM_COLS = 20 # 16
 
 # degree symbol
 degreeSymbol = [
@@ -105,7 +105,39 @@ def test_main():
     # lcd.putstr("It Works!" + custom_str)  #+custom_char)
     lcd.putstr("It Works!" + custom_char) 
     
-    # more()
+    utime.sleep(2)
+
+    print("Filling display, "+str(I2C_NUM_ROWS) + ",  "+ str(I2C_NUM_COLS))
+    
+    i = 32
+    row = 0
+    col = 0
+    lcd.clear()
+    string = ""
+    while i < 256:
+        i += 1
+        col += 1
+        if col >= I2C_NUM_COLS:
+            print("printing string: " + string)
+            lcd.move_to(0,row)
+            lcd.putstr(string)
+            col = 0
+            
+            row += 1
+            if row >= I2C_NUM_ROWS:
+                print("sleep 4 sec")
+                utime.sleep(4)
+                lcd.clear()
+                lcd.move_to(0,0)
+                lcd.putstr(string)
+                row = 0
+                
+            string = ""
+            
+        string += chr(i)
+
+                
+
     
 def more():
     utime.sleep(2)
@@ -128,7 +160,6 @@ def more():
             HH=time[3], MM=time[4], SS=time[5]))
         """
         
-
         if count % 10 == 0:
             print("Turning cursor on")
             lcd.show_cursor()
@@ -167,6 +198,7 @@ def more():
             lcd.putstr(string)
             
         
+
         count += 1
         utime.sleep(2)
 
