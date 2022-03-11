@@ -27,24 +27,48 @@ class ModuleService(Service):
         
     async def run_test(self):
         while True:
-            xmit = xmit_lcd.XmitLcd(fr=self.name)
-            xmit.clear_screen().set_msg("⏶ press any key" + "\n⏷ to start tests")
+            xmit = xmit_lcd.XmitLcd(fr=self.name).clear_screen()
+            xmit.set_msg("⏶ press any key" + "\n⏷ to start tests")
             await self.put_to_output_q(xmit)
             
-            tests = self.set_tests(xmit)
-            
+            tests_len = len(self.set_tests(xmit))
+            lcd_col_cnt = self.get_parm("lcd_col_cnt",16)
             await self.await_ir_input()
-            
-            for i in range(len(tests)):
+
+            i = 0
+            while i < tests_len:
+
                 xmit = xmit_lcd.XmitLcd(fr=self.name).clear_screen()
+                
                 tests = self.set_tests(xmit)
                 test_name = str(tests[i].__name__)
-                xmit.set_msg(test_name+"\n")
-                tests[i]()
+                prompt = "⏴ " + test_name+(" "*(lcd_col_cnt-2))
+                
+                # replace last character on display with "⏵"
+                prompt = prompt[:lcd_col_cnt-2] + "⏵\n"
+                
+                xmit.set_msg(prompt)
+                tests[i]() # actually execute the test
+                
                 await self.put_to_output_q(xmit)
                 
-                # prevent up/down arrows from leaving display
-                await self.await_ir_input(control_keys=None) 
+                # prevent up/down arrows from leaving display: control_keys=None
+                key = (await self.await_ir_input(control_keys=None)).get_msg()
+                
+                if key == "⏴":
+                    i -= 1
+                    if i < 0:
+                        # exit inner loop if left arrow on first test
+                        i = len(tests)
+                else:
+                    i += 1
+
+                    
+                 
+
+
+                
+
             
 
 

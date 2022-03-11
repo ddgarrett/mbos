@@ -9,7 +9,7 @@
     See xmit_lcd.py for how to build input messages for this service.
     
     Accepts following commands:
-        'clear'               clears LCD display
+        'clear'               clears LCD display and resets all cursors, etc.
         {'cursor':[x,y]}      sets cursor to x (column 0 thru ??), y (row = 0 or 1)
         {'backlight':1}       turns backlight on (1) or off (0)
         {'msg':'some text'}   displays 'some text'
@@ -79,7 +79,7 @@ class ModuleService(Service):
 
         # dictionary to execute commands
         self.cmd_lookup = {
-            xmit_lcd.CMD_CLEAR_SCREEN : self.lcd.clear,
+            xmit_lcd.CMD_CLEAR_SCREEN : self.clear_screen,
 
             xmit_lcd.CMD_CURSOR_ON    : self.lcd.show_cursor,
             xmit_lcd.CMD_CURSOR_OFF   : self.lcd.hide_cursor,
@@ -175,6 +175,15 @@ class ModuleService(Service):
         else:
             self.lcd.backlight_off()
             self.backlight_on = False
+            
+    # make sure that when we clear the screen
+    # we reset the display, backlight and cursor
+    def clear_screen(self):
+        self.lcd.clear()
+        self.lcd.backlight_on()
+        self.lcd.display_on()
+        self.lcd.blink_cursor_off()
+        self.lcd.hide_cursor()
             
                 
         
