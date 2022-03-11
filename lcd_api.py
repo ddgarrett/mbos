@@ -16,6 +16,10 @@ class LcdApi:
     # Comment out setting of self.implied_newline
     # Once turned on it was never reset, disabling \n capability
     #
+    # Modified Mar 11, 2022  by: D. Garrett
+    # Remove auto wrap of text. Makes it difficult to use the same app
+    # with different screen sizes. Instead just truncate anything beyond boundaries.
+    #
     
     # HD44780 LCD controller command set
     LCD_CLR             = 0x01  # DB0: clear display
@@ -138,19 +142,23 @@ class LcdApi:
                 # so if we get a newline right after that we ignore it.
                 pass
             else:
-                self.cursor_x = self.num_columns
+                # self.cursor_x = self.num_columns
+                self.cursor_x = 0
+                self.cursor_y +=1
         else:
-            self.hal_write_data(ord(char))
+            # ignore anything beyond end of screen
+            if self.cursor_x < self.num_columns:
+                self.hal_write_data(ord(char))
             self.cursor_x += 1
-        if self.cursor_x >= self.num_columns:
-            self.cursor_x = 0
-            self.cursor_y += 1
+        # if self.cursor_x >= self.num_columns:
+        #     self.cursor_x = 0
+        #     self.cursor_y += 1
             # don't turn this on
             # once on, it is never reset unless the
             # lcd is reinitialized
             # self.implied_newline = (char != '\n')
-        if self.cursor_y >= self.num_lines:
-            self.cursor_y = 0
+        # if self.cursor_y >= self.num_lines:
+        #    self.cursor_y = 0
         self.move_to(self.cursor_x, self.cursor_y)
 
     def putstr(self, string):
