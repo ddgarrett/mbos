@@ -7,7 +7,9 @@
 "defaults": { 
     "q_in_size":5,
     "q_out_size":5,
-    "ir_remote": "ir_remote"
+    "ir_remote": "ir_remote",
+    "lcd_col_cnt":20,
+    "lcd_row_cnt":4
     },
 
 "services": [
@@ -15,7 +17,7 @@
         "startup_focus":"menu",  "menu":"menu" },
          
     {"name":"menu",       "module":"service_menu",     "initial_app":"dht11",  
-        "menu":[ "dht11", "lcd_off", "mem_use", "timer", "clock"]
+        "menu":[ "menu", "dht11", "lcd_off", "mem_use", "timer", "clock"]
         },
         
     {"name":"lcd",        "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
