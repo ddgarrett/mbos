@@ -40,15 +40,12 @@ class ModuleService(Service):
 
                 xmit = xmit_lcd.XmitLcd(fr=self.name).clear_screen()
                 
-                tests = self.set_tests(xmit)
-                test_name = str(tests[i].__name__)
-                prompt = "⏴ " + test_name+(" "*(lcd_col_cnt-2))
-                
-                # replace last character on display with "⏵"
-                prompt = prompt[:lcd_col_cnt-2] + "⏵\n"
-                
+                test = self.set_tests(xmit)[i]
+                test_name = str(test.__name__)
+                format_str = "⏴ {0: <"+str(lcd_col_cnt-2)+"}"
+                prompt = format_str.format(test_name)[:lcd_col_cnt-1]+"⏵\n"
                 xmit.set_msg(prompt)
-                tests[i]() # actually execute the test
+                test() # actually execute the test - added to xmit
                 
                 await self.put_to_output_q(xmit)
                 
