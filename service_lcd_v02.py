@@ -184,6 +184,7 @@ class ModuleService(Service):
         self.lcd.display_on()
         self.lcd.blink_cursor_off()
         self.lcd.hide_cursor()
+        self.blink_interval = 0
             
                 
         
