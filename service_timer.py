@@ -31,6 +31,8 @@ import xmit_message_handler
 import utime
 import utf8_char
 
+import subsvc_total_time
+
 # All services classes are named ModuleService
 class ModuleService(Service):
     async def run(self):
@@ -84,7 +86,11 @@ class ModuleService(Service):
         await self.prompt("#1")
         await self.update_running_display(timers[0],"00:00:00")
         
-        await self.run_timers(timers)
+        xmit = await self.run_timers(timers)
+        if xmit == None:
+            print("no xmit received?")
+        else:
+            print("received msg: " + str(xmit.get_msg()))
 
         return
             
@@ -128,27 +134,27 @@ class ModuleService(Service):
         key = xmit.get_msg()
         
         if key == utf8_char.KEY_REVERSE_BACK:
-                return
+                return xmit
             
+        total_timer = subsvc_total_time.ModuleSubservice(self,0,1)
+        tt_task = uasyncio.create_task(total_timer.run())
+        
         ticks_start = utime.ticks_ms()
         
         for idx in range(len(timers)):
             timer_tick_start = utime.ticks_ms()
-            await self.run_timer(timers[idx],timer_tick_start,ticks_start)
+            xmit = await self.run_timer(timers[idx],timer_tick_start,ticks_start)
+            if xmit != None:
+                print("cancelling subtask")
+                tt_task.cancel()
+                return xmit
                          
-        return
+        return None
         
     async def run_timer(self, timer, timer_tick_start, running_ticks_start):
         
         timer_ms = self.calc_timer_ticks_ms(timer)
-        
-        # test blink_lcd
-        # uasyncio.create_task(self.blink_lcd(.5))
-        xmit = xmit_lcd.XmitLcd(fr=self.name)
-        xmit.blink_backlight(.5)
-        await self.put_to_output_q(xmit)
-        
-         
+                 
         while True:
             await uasyncio.sleep_ms(1000)
             
@@ -156,6 +162,11 @@ class ModuleService(Service):
             timer_fmt = self.decrement_timer_remain(timer_ms,timer_tick_start)
             # timer_fmt = self.format_timer(timers[idx])
             await self.update_display_formatted(timer_fmt,total_fmt)
+            
+            xmit = await self.get_any_input()
+            if xmit != None:
+                return xmit
+            
             
             # await self.run_timer(timers[idx],total_timer)
         
@@ -165,7 +176,8 @@ class ModuleService(Service):
     async def update_display_formatted(self, timer_formatted,total_timer_formatted):
         xmit = xmit_lcd.XmitLcd(fr=self.name)
         xmit.set_cursor(3,0).set_msg(timer_formatted)
-        xmit.set_cursor(0,1).set_msg(total_timer_formatted)
+        # don't show running total
+        # xmit.set_cursor(0,1).set_msg(total_timer_formatted) 
         await self.put_to_output_q(xmit)
         
     # set the total_timer based on # ticks since ticks_start
