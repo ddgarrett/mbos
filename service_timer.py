@@ -84,7 +84,7 @@ class ModuleService(Service):
             
         # run timers
         await self.prompt("#1")
-        await self.update_running_display(timers[0],"00:00:00")
+        await self.update_running_display(timers[0])
         
         xmit = await self.run_timers(timers)
         if xmit == None:
@@ -128,73 +128,53 @@ class ModuleService(Service):
             if timer != timer_copy:
                 await self.update_timer_display(timer)
         
-            
     async def run_timers(self, timers):
+        
+        total_timer = subsvc_total_time.ModuleSubservice(self,0,1)
+        await total_timer.init_display()
+        
         xmit = await self.await_ir_input(utf8_char.KEYS_FORWARD_REVERSE)                
         key = xmit.get_msg()
         
         if key == utf8_char.KEY_REVERSE_BACK:
-                return xmit
+            # TODO: confirm cancel before doing so
+            return xmit
             
-        total_timer = subsvc_total_time.ModuleSubservice(self,0,1)
         tt_task = uasyncio.create_task(total_timer.run())
-        
-        ticks_start = utime.ticks_ms()
-        
+                
         for idx in range(len(timers)):
             timer_tick_start = utime.ticks_ms()
-            xmit = await self.run_timer(timers[idx],timer_tick_start,ticks_start)
+            xmit = await self.run_timer(timers[idx],timer_tick_start)
             if xmit != None:
-                print("cancelling subtask")
                 tt_task.cancel()
                 return xmit
                          
         return None
         
-    async def run_timer(self, timer, timer_tick_start, running_ticks_start):
+    async def run_timer(self, timer, timer_tick_start):
         
         timer_ms = self.calc_timer_ticks_ms(timer)
                  
         while True:
             await uasyncio.sleep_ms(1000)
             
-            total_fmt = self.increment_total_timer(running_ticks_start)
             timer_fmt = self.decrement_timer_remain(timer_ms,timer_tick_start)
-            # timer_fmt = self.format_timer(timers[idx])
-            await self.update_display_formatted(timer_fmt,total_fmt)
+            await self.update_display_formatted(timer_fmt)
             
             xmit = await self.get_any_input()
             if xmit != None:
+                #TODO: confirm cancel?
+                # Allow skipping current timer?
                 return xmit
-            
-            
-            # await self.run_timer(timers[idx],total_timer)
+
+    async def update_running_display(self, timer):
+        await self.update_display_formatted(self.format_timer(timer))
         
-    async def update_running_display(self, timer,total_timer):
-        await self.update_display_formatted(self.format_timer(timer),total_timer)
-        
-    async def update_display_formatted(self, timer_formatted,total_timer_formatted):
+    async def update_display_formatted(self, timer_formatted):
         xmit = xmit_lcd.XmitLcd(fr=self.name)
-        xmit.set_cursor(3,0).set_msg(timer_formatted)
-        # don't show running total
-        # xmit.set_cursor(0,1).set_msg(total_timer_formatted) 
+        xmit.set_cursor(3,0).set_msg(timer_formatted) 
         await self.put_to_output_q(xmit)
         
-    # set the total_timer based on # ticks since ticks_start
-    def increment_total_timer(self, ticks_start):
-        ticks = utime.ticks_ms()
-        diff = ticks-ticks_start
-        # total_timer = [[0]*6]
-        
-        sec_total = int(round(diff/1000,0))
-        sec = sec_total%60
-        minutes_total = int((sec_total - sec)/60)
-        minutes = minutes_total%60
-        hours = int((minutes_total - minutes)/60)
-        
-        elapsed = "{:02d}:{:02d}:{:02d}".format(hours,minutes,sec)
-        return elapsed
-
     def decrement_timer_remain(self, timer_ms,ticks_start):
         ticks = utime.ticks_ms()
         diff  = ticks-ticks_start
@@ -234,12 +214,7 @@ class ModuleService(Service):
     def format_timer(self,timer):
         d = "{0}{1}:{2}{3}"
         return d.format(*timer)
-        
-    # 6 digit time format
-    def format_total_timer(self,timer):
-        d = "{0}{1}:{2}{3}:{4}{5}"
-        return d.format(*timer)
-    
+
         
         
 
