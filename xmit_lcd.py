@@ -27,6 +27,7 @@ CMD_DISPLAY_OFF = 'display_off'
 
 
 
+
 class XmitLcd(XmitMsg):
     
     def __init__(self,fr="",to="lcd",msg=""):
@@ -99,5 +100,14 @@ class XmitLcd(XmitMsg):
     def blink_backlight(self,interval):
         x = interval * 1000  # cause exception if we can't multiply interval by 1,000
         self.msg.append({'blink_backlight':interval})
+        
+    def blink_slow(self):
+        self.blink_backlight(.5)
+    
+    def blink_fast(self):
+        self.blink_backlight(.25)
+        
+    def blink_off(self):
+        self.blink_backlight(0)
             
         
