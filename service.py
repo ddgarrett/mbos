@@ -155,6 +155,16 @@ class Service:
                     return
             
             await uasyncio.sleep_ms(0)
+    
+    # Check the input queue for any input.
+    # If found, return the queue
+    # else return None
+    async def get_any_input(self):
+        q_in = self.get_input_queue()
+        if not q_in.empty():
+            return await q_in.get()
+        
+        return None
         
     #
     # Loop that waits until we get input from IR Reciever
