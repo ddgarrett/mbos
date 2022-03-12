@@ -22,7 +22,8 @@ class ModuleService(Service):
                   xmit.set_blink_cursor_on, xmit.set_blink_cursor_off,
                   xmit.set_cursor_off,
                   xmit.set_backlight_off, xmit.set_backlight_on,
-                  xmit.set_display_off, xmit.set_display_on
+                  xmit.set_display_off, xmit.set_display_on,
+                  xmit.blink_slow, xmit.blink_fast, xmit.blink_off
             ]
         
     async def run_test(self):
@@ -46,7 +47,7 @@ class ModuleService(Service):
                 prompt = format_str.format(test_name)[:lcd_col_cnt-1]+"⏵\n"
                 xmit.set_msg(prompt)
                 test() # actually execute the test - added to xmit
-                
+                    
                 await self.put_to_output_q(xmit)
                 
                 # prevent up/down arrows from leaving display: control_keys=None
@@ -60,8 +61,7 @@ class ModuleService(Service):
                 else:
                     i += 1
 
-                    
-                 
+
 
 
                 
