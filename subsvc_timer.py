@@ -47,13 +47,16 @@ class CountDownTimer(Subservice):
         
         self.timer = [0,0,0,0] # mm, ss
         self.name = service.name + ".subsvc_timer"
+        self.remain_ms = 100_000
     
-    # temporary to pass timer, set of four numbers
-    # TODO: input this earlier in process
-    async def init_display(self,timer):
+    # temporary - to set timer before running
+    def init_value(self,timer):
         self.timer = timer
+    
+    # initial display of countdown timer,
+    # before it starts running
+    async def init_display(self):
         self.calc_timer_ticks_ms()
-        
         await self.update_display(self.format_timer())
     
     # given a timer as a list [m, m, s, s]
@@ -73,20 +76,20 @@ class CountDownTimer(Subservice):
     async def run(self):
         
         self.ticks_start = utime.ticks_ms()
+        self.update_remain_ms()
 
-        while True:
+        while self.remain_ms > 0:
             await uasyncio.sleep_ms(1000)
-            timer_fmt = self.decrement_timer()
+            self.update_remain_ms()
+            timer_fmt = self.fmt_remain_ms()
             await self.update_display(timer_fmt)        
         
-    def decrement_timer(self):
-        ticks = utime.ticks_ms()
-        diff  = ticks-self.ticks_start
-        remain_ms = self.timer_ms - diff
-        if remain_ms <= 0:
+    # format remaining milliseconds as mm:ss
+    def fmt_remain_ms(self):
+        if self.remain_ms <= 0:
             return "00:00"
         
-        sec_total = int(round(remain_ms/1000,0))
+        sec_total = int(round(self.remain_ms/1000,0))
         sec = sec_total%60
         minutes_total = int((sec_total - sec)/60)
         minutes = minutes_total%60
@@ -94,6 +97,12 @@ class CountDownTimer(Subservice):
         remain = "{:02d}:{:02d}".format(minutes,sec)
         return remain
 
+    # calculate number of milliseconds remaining on timer
+    def update_remain_ms(self):
+        ticks = utime.ticks_ms()
+        diff  = ticks-self.ticks_start
+        self.remain_ms = self.timer_ms - diff
+        
 
 
         

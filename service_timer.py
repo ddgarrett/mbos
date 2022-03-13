@@ -66,8 +66,15 @@ class ModuleService(Service):
         
     # define then run specified number of timers
     async def define_and_run_timers(self,cnt):
-        timers = [[0]*4]*cnt
-
+        timers = []
+        self.timer_objs = []
+        
+        for i in range(cnt):
+            timers.append([0,0,0,0])
+            self.timer_objs.append(subsvc_timer.CountDownTimer(self,3,0))
+        
+        # print(str(timer_objs)+"[0]: " + str(timer_objs[0]))
+        
         # define timers
         for idx in range(cnt):
             
@@ -80,6 +87,8 @@ class ModuleService(Service):
             
             if key == utf8_char.KEY_REVERSE_BACK:
                 return
+            
+            self.timer_objs[idx].init_value(timers[idx])
             
             await uasyncio.sleep_ms(0)
             
@@ -133,8 +142,10 @@ class ModuleService(Service):
         await self.prompt("#1")
         #await self.update_running_display(timers[0])
         
-        rundown_timer = subsvc_timer.CountDownTimer(self,3,0)
-        await rundown_timer.init_display(timers[0])
+        # rundown_timer = subsvc_timer.CountDownTimer(self,3,0)
+        # await rundown_timer.init_display(timers[0])
+        rundown_timer = self.timer_objs[0]
+        await rundown_timer.init_display()
         
         total_timer = subsvc_total_time.TotalTime(self,0,1)
         await total_timer.init_display()
@@ -149,6 +160,8 @@ class ModuleService(Service):
         tt_task = uasyncio.create_task(total_timer.run())
         rt_task = uasyncio.create_task(rundown_timer.run())
         
+        idx = 0
+        
         while True:
             await uasyncio.sleep_ms(250)
             xmit = await self.get_any_input()
@@ -159,10 +172,30 @@ class ModuleService(Service):
                 rt_task.cancel()
                 return xmit
             
-            if rundown_timer.prev_display == "00:00":
-                tt_task.cancel()
-                rt_task.cancel()
-                return None
+            if rundown_timer.remain_ms <= 0:
+                # rundown_timer exits when reaches 0
+                idx += 1
+                if idx >= len(self.timer_objs):
+                    await self.prompt("Any key to exit",clear_screen=False)
+                    await self.await_ir_input(control_keys=None)
+                    tt_task.cancel()
+                    return None
+                
+                await self.write_timer_number(idx)
+                await self.prompt("#"+str(idx+1),clear_screen=False)
+                
+                rundown_timer = self.timer_objs[idx]
+                await rundown_timer.init_display()
+                
+                # wait for any key to run next timer
+                xmit = await self.await_ir_input(control_keys=None)                
+                key = xmit.get_msg()
+        
+                if key == utf8_char.KEY_REVERSE_BACK:
+                    # TODO: confirm cancel before doing so
+                    return xmit
+                
+                rt_task = uasyncio.create_task(rundown_timer.run())
                     
         """
         for idx in range(len(timers)):
@@ -175,6 +208,14 @@ class ModuleService(Service):
     
         return None
         """
+        
+    # write timer number at position 0,0
+    async def write_timer_number(self, idx):
+        xmit = xmit_lcd.XmitLcd(fr=self.name)
+        xmit.set_cursor(0,0)
+        
+        xmit.set_msg("#"+str((idx+1)))
+        await self.put_to_output_q(xmit)
         
     async def run_timer(self, timer, timer_tick_start):
         
@@ -225,9 +266,16 @@ class ModuleService(Service):
         
     # send a message to the LCD,
     # clearing before displaying message
-    async def prompt(self,msg):
+    async def prompt(self,msg,clear_screen=True,cursor=[0,0]):
         xmit = xmit_lcd.XmitLcd(fr=self.name)
-        xmit.clear_screen().set_msg(msg)
+        if clear_screen:
+            xmit.clear_screen()
+            if cursor != [0,0]:
+                xmit.set_cursor(0,0)
+        else:
+            xmit.set_cursor(cursor[0],cursor[1])
+            
+        xmit.set_msg(msg)
         await self.put_to_output_q(xmit)    
 
     async def update_timer_display(self,timer):
@@ -240,7 +288,7 @@ class ModuleService(Service):
         d = "{0}{1}:{2}{3}"
         return d.format(*timer)
 
-        
+
         
 
         
