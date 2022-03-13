@@ -178,7 +178,7 @@ class ModuleService(Service):
                     tt_task.cancel()
                     return None
                 
-                await self.write_timer_number(idx)
+                # await self.write_timer_number(idx)
                 await self.prompt("#"+str(idx+1),clear_screen=False)
                 
                 rundown_timer = self.timer_objs[idx]
@@ -193,27 +193,7 @@ class ModuleService(Service):
                     return xmit
                 
                 rt_task = uasyncio.create_task(rundown_timer.run())
-                    
-        """
-        for idx in range(len(timers)):
-            rundown_timer = subsvc_timer.
-            timer_tick_start = utime.ticks_ms()
-            xmit = await self.run_timer(timers[idx],timer_tick_start)
-            if xmit != None:
-                tt_task.cancel()
-                return xmit
     
-        return None
-        """
-        
-    # write timer number at position 0,0
-    async def write_timer_number(self, idx):
-        xmit = xmit_lcd.XmitLcd(fr=self.name)
-        xmit.set_cursor(0,0)
-        
-        xmit.set_msg("#"+str((idx+1)))
-        await self.put_to_output_q(xmit)
-        
     async def run_timer(self, timer, timer_tick_start):
         
         timer_ms = self.calc_timer_ticks_ms(timer)
@@ -229,38 +209,7 @@ class ModuleService(Service):
                 #TODO: confirm cancel?
                 # Allow skipping current timer?
                 return xmit
-
-    async def update_running_display(self, timer):
-        await self.update_display_formatted(self.format_timer(timer))
-        
-    async def update_display_formatted(self, timer_formatted):
-        xmit = xmit_lcd.XmitLcd(fr=self.name)
-        xmit.set_cursor(3,0).set_msg(timer_formatted) 
-        await self.put_to_output_q(xmit)
-        
-    def decrement_timer_remain(self, timer_ms,ticks_start):
-        ticks = utime.ticks_ms()
-        diff  = ticks-ticks_start
-        remain_ms = timer_ms - diff
-        if remain_ms < 0:
-            return "00:00"
-        
-        sec_total = int(round(remain_ms/1000,0))
-        sec = sec_total%60
-        minutes_total = int((sec_total - sec)/60)
-        minutes = minutes_total%60
-        
-        remain = "{:02d}:{:02d}".format(minutes,sec)
-        return remain
-        
-    # given a timer as a list [m, m, s, s]
-    # return the number of milliseconds in the timer
-    def calc_timer_ticks_ms(self,timer):
-        minutes = 10*timer[0] + timer[1]
-        seconds = 10*timer[2] + timer[3]
-        ms = ((minutes * 60) + seconds) * 1000
-        return ms
-        
+    
     # send a message to the LCD,
     # clearing before displaying message
     async def prompt(self,msg,clear_screen=True,cursor=[0,0]):
