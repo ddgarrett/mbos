@@ -32,6 +32,7 @@ import utime
 import utf8_char
 
 import subsvc_total_time
+import subsvc_timer
 
 # All services classes are named ModuleService
 class ModuleService(Service):
@@ -82,9 +83,7 @@ class ModuleService(Service):
             
             await uasyncio.sleep_ms(0)
             
-        # run timers
-        await self.prompt("#1")
-        await self.update_running_display(timers[0])
+
         
         xmit = await self.run_timers(timers)
         if xmit == None:
@@ -130,9 +129,16 @@ class ModuleService(Service):
         
     async def run_timers(self, timers):
         
-        total_timer = subsvc_total_time.ModuleSubservice(self,0,1)
-        await total_timer.init_display()
+        # run timers
+        await self.prompt("#1")
+        #await self.update_running_display(timers[0])
         
+        rundown_timer = subsvc_timer.CountDownTimer(self,3,0)
+        await rundown_timer.init_display(timers[0])
+        
+        total_timer = subsvc_total_time.TotalTime(self,0,1)
+        await total_timer.init_display()
+                
         xmit = await self.await_ir_input(utf8_char.KEYS_FORWARD_REVERSE)                
         key = xmit.get_msg()
         
@@ -141,15 +147,34 @@ class ModuleService(Service):
             return xmit
             
         tt_task = uasyncio.create_task(total_timer.run())
-                
+        rt_task = uasyncio.create_task(rundown_timer.run())
+        
+        while True:
+            await uasyncio.sleep_ms(250)
+            xmit = await self.get_any_input()
+            if xmit != None:
+                #TODO: confirm cancel?
+                # Allow skipping current timer?
+                tt_task.cancel()
+                rt_task.cancel()
+                return xmit
+            
+            if rundown_timer.prev_display == "00:00":
+                tt_task.cancel()
+                rt_task.cancel()
+                return None
+                    
+        """
         for idx in range(len(timers)):
+            rundown_timer = subsvc_timer.
             timer_tick_start = utime.ticks_ms()
             xmit = await self.run_timer(timers[idx],timer_tick_start)
             if xmit != None:
                 tt_task.cancel()
                 return xmit
-                         
+    
         return None
+        """
         
     async def run_timer(self, timer, timer_tick_start):
         

@@ -30,6 +30,7 @@ class Subservice:
     def __init__(self, service):
         self.service = service
         self.has_focus = False
+        self.prev_display = "                    "
         
         
     def get_svc(self):
@@ -72,6 +73,28 @@ class Subservice:
         return await self.service.await_ir_input(accept_keys,control_keys,
                                                  gain_focus_func,lose_focus_func)
 
+    # Update a subservice display taking care to only
+    # write what's changed.
+    # WARNING: currently all messages must be the same length
+    # and no longer than 20 characters
+    async def update_display(self,fmt_display):
+        
+        if fmt_display == self.prev_display:
+            return
+        
+        col = 0
+        while (col < len(fmt_display)
+          and  self.prev_display[col] == fmt_display[col]):
+            col += 1
+
+        self.prev_display = fmt_display
+        lcd_x = col + self.lcd_x
+        
+        xmit = xmit_lcd.XmitLcd(fr=self.name)
+        xmit.set_cursor(lcd_x,self.lcd_y)
+        
+        xmit.set_msg(fmt_display[col:])
+        await self.service.put_to_output_q(xmit)
         
     ## return a value for a parameter in the original .json file
     ##    or the default parm value if parm was not in the .json file
