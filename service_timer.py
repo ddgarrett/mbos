@@ -66,35 +66,32 @@ class ModuleService(Service):
         
     # define then run specified number of timers
     async def define_and_run_timers(self,cnt):
-        timers = []
+        
         self.timer_objs = []
         
         for i in range(cnt):
-            timers.append([0,0,0,0])
             self.timer_objs.append(subsvc_timer.CountDownTimer(self,3,0))
-        
-        # print(str(timer_objs)+"[0]: " + str(timer_objs[0]))
         
         # define timers
         for idx in range(cnt):
             
             # default timers after first to the previous timer
-            if idx > 0 and timers[idx] == [0]*4 :
-                timers[idx] = timers[idx-1].copy()
+            if idx > 0 and self.timer_objs[idx].timer == [0]*4 :
+                self.timer_objs[idx].timer = self.timer_objs[idx-1].timer.copy()
                 
-            await self.prompt("#"+str(idx+1)+" " + self.format_timer(timers[idx]))
-            key = await self.get_timer(timers[idx])
+            await self.prompt("#"+str(idx+1)+" " + self.format_timer(self.timer_objs[idx].timer))
+            key = await self.get_timer(self.timer_objs[idx].timer)
             
             if key == utf8_char.KEY_REVERSE_BACK:
                 return
             
-            self.timer_objs[idx].init_value(timers[idx])
+            # self.timer_objs[idx].init_value(timers[idx])
             
             await uasyncio.sleep_ms(0)
             
 
         
-        xmit = await self.run_timers(timers)
+        xmit = await self.run_timers()
         if xmit == None:
             print("no xmit received?")
         else:
@@ -136,7 +133,7 @@ class ModuleService(Service):
             if timer != timer_copy:
                 await self.update_timer_display(timer)
         
-    async def run_timers(self, timers):
+    async def run_timers(self):
         
         # run timers
         await self.prompt("#1")
