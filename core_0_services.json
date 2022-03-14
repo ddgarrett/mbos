@@ -17,12 +17,12 @@
         "startup_focus":"menu",  "menu":"menu" },
          
     {"name":"menu",       "module":"service_menu",     "initial_app":"timer",  
-        "menu":[ "dht11", "mem_use", "timer", "clock"]
+        "menu":[ "temp", "mem_use", "timer", "clock"]
         },
         
     {"name":"lcd",        "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
         
-    {"name":"dht11",      "module":"service_dht11" },
+    {"name":"temp",      "module":"service_dht11" },
         
     {"name":"log",        "module":"service_print",  "q_in_size":1000,  "print_log":1,
       "todo": "make a log to disk version, or have that as an option?" },
