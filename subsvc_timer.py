@@ -37,6 +37,8 @@ import utime
 import xmit_lcd
 import xmit_message_handler
 
+import utf8_char
+
 
 class CountDownTimer(Subservice):
     
@@ -48,15 +50,52 @@ class CountDownTimer(Subservice):
         self.timer = [0,0,0,0] # mm, ss
         self.name = service.name + ".subsvc_timer"
         self.remain_ms = 100_000
-    
-    # temporary - to set timer before running
-    def init_value(self,timer):
-        self.timer = timer
-    
+        
+    # allow input of a new timer digits
+    async def input_timer(self, default_value):
+        
+        if self.timer == [0,0,0,0]:
+            self.timer = default_value
+        
+        self.reset_prev_display()
+        
+        while True:
+            await self.update_display(self.format_timer())
+            
+            xmit = await self.service.await_ir_input()
+            key = xmit.get_msg()
+                
+            # back key when timer is all zeros?
+            if (key == utf8_char.KEY_REVERSE_BACK
+                and self.timer == [0]*4):
+                    return key
+                
+            # forward or ok key when timer is not all zeros?
+            if ((key == utf8_char.KEY_FORWARD_NEXT_PLAY or
+                 key == utf8_char.KEY_OK)
+            and  self.timer != [0]*4):
+                    return key
+            
+            # add a digit
+            if key >= "0" and key <= "9":
+                n = int(key)
+                self.timer[0] = self.timer[1]
+                self.timer[1] = self.timer[2]
+                self.timer[2] = self.timer[3]
+                self.timer[3] = n
+                    
+            # remove a digit
+            if key == utf8_char.KEY_REVERSE_BACK:
+                self.timer[3] = self.timer[2]
+                self.timer[2] = self.timer[1]
+                self.timer[1] = self.timer[0]
+                self.timer[0] = 0
+            
     # initial display of countdown timer,
     # before it starts running
     async def init_display(self):
         self.calc_timer_ticks_ms()
+        self.reset_prev_display()
         await self.update_display(self.format_timer())
     
     # given a timer as a list [m, m, s, s]

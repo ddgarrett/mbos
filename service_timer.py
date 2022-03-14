@@ -57,7 +57,7 @@ class ModuleService(Service):
             xmit = await self.await_ir_input(gain_focus_func=prompt_timer_cnt)
             msg = xmit.get_msg()
             if msg < "1" or msg > "9":
-                await self.prompt("⏶ Enter\n 1 thru 9\n⏷")
+                await self.prompt("⏶ Enter\n⏷ 1 thru 9")
             else:
                 return int(msg)
             
@@ -72,75 +72,32 @@ class ModuleService(Service):
         for i in range(cnt):
             self.timer_objs.append(subsvc_timer.CountDownTimer(self,3,0))
         
+        default_timer = [0,0,0,0]
+        
         # define timers
         for idx in range(cnt):
             
-            # default timers after first to the previous timer
-            if idx > 0 and self.timer_objs[idx].timer == [0]*4 :
-                self.timer_objs[idx].timer = self.timer_objs[idx-1].timer.copy()
-                
-            await self.prompt("#"+str(idx+1)+" " + self.format_timer(self.timer_objs[idx].timer))
-            key = await self.get_timer(self.timer_objs[idx].timer)
+            await self.prompt("#"+str(idx+1)+" ")
+            key = await self.timer_objs[idx].input_timer(default_timer)
             
             if key == utf8_char.KEY_REVERSE_BACK:
                 return
             
-            # self.timer_objs[idx].init_value(timers[idx])
-            
+            default_timer = self.timer_objs[idx].timer.copy()
             await uasyncio.sleep_ms(0)
-            
-
         
+        # Now run the timers
         xmit = await self.run_timers()
-        if xmit == None:
-            print("no xmit received?")
-        else:
+        if xmit != None:
             print("received msg: " + str(xmit.get_msg()))
 
         return
-            
-    # get a single timer - list of 4 single digit ints
-    async def get_timer(self,timer):
-
-        while True:
-            timer_copy = timer.copy()
-            
-            xmit = await self.await_ir_input()
-            key = xmit.get_msg()
-            
-            if (key == utf8_char.KEY_REVERSE_BACK
-            and timer == [0]*4):
-                return key
-            
-            if ((key == utf8_char.KEY_FORWARD_NEXT_PLAY or
-                 key == utf8_char.KEY_OK)
-            and  timer != [0]*4):
-                return key
                 
-            if key >= "0" and key <= "9":
-                n = int(key)
-                timer[0] = timer[1]
-                timer[1] = timer[2]
-                timer[2] = timer[3]
-                timer[3] = n
-                
-            if key == utf8_char.KEY_REVERSE_BACK:
-                timer[3] = timer[2]
-                timer[2] = timer[1]
-                timer[1] = timer[0]
-                timer[0] = 0
-        
-            if timer != timer_copy:
-                await self.update_timer_display(timer)
-        
     async def run_timers(self):
         
         # run timers
         await self.prompt("#1")
-        #await self.update_running_display(timers[0])
         
-        # rundown_timer = subsvc_timer.CountDownTimer(self,3,0)
-        # await rundown_timer.init_display(timers[0])
         rundown_timer = self.timer_objs[0]
         await rundown_timer.init_display()
         
@@ -161,7 +118,12 @@ class ModuleService(Service):
         
         while True:
             await uasyncio.sleep_ms(250)
-            xmit = await self.get_any_input()
+            xmit = await self.get_any_input() #non blocking
+            
+            # TODO: confirm it's a back key
+            # if ok or forward, pause...
+            # if second forward, skip current timer and go to next
+            # blank out prompt in either case
             if xmit != None:
                 #TODO: confirm cancel?
                 # Allow skipping current timer?
@@ -170,7 +132,12 @@ class ModuleService(Service):
                 return xmit
             
             if rundown_timer.remain_ms <= 0:
-                # rundown_timer exits when reaches 0
+                
+                xmit = await self.timer_expired()
+                if xmit.get_msg() == utf8_char.KEY_REVERSE_BACK:
+                    return xmit
+                
+                # rundown_timer.run() exits when reaches 0
                 idx += 1
                 if idx >= len(self.timer_objs):
                     await self.prompt("Any key to exit",clear_screen=False)
@@ -194,21 +161,30 @@ class ModuleService(Service):
                 
                 rt_task = uasyncio.create_task(rundown_timer.run())
     
-    async def run_timer(self, timer, timer_tick_start):
+    # blink LCD and await user input
+    async def timer_expired(self):
+        xmit = xmit_lcd.XmitLcd(fr=self.name)
         
-        timer_ms = self.calc_timer_ticks_ms(timer)
-                 
-        while True:
-            await uasyncio.sleep_ms(1000)
-            
-            timer_fmt = self.decrement_timer_remain(timer_ms,timer_tick_start)
-            await self.update_display_formatted(timer_fmt)
-            
-            xmit = await self.get_any_input()
-            if xmit != None:
-                #TODO: confirm cancel?
-                # Allow skipping current timer?
-                return xmit
+        xmit.blink_slow()
+        await self.put_to_output_q(xmit)
+        
+        xmit = await self.await_ir_input(control_keys=None)                
+        key = xmit.get_msg()
+        
+        xmit = xmit_lcd.XmitLcd(fr=self.name)
+        await self.put_to_output_q(
+                   xmit.blink_off().
+                   set_cursor(9,0).
+                   set_msg("next ⏵")
+                   )
+ 
+        xmit_exit = await self.await_ir_input(control_keys=None)                
+        
+        xmit = xmit_lcd.XmitLcd(fr=self.name)
+        xmit.set_cursor(9,0).set_msg("            ")
+        await self.put_to_output_q(xmit)
+        
+        return xmit_exit
     
     # send a message to the LCD,
     # clearing before displaying message
@@ -223,18 +199,3 @@ class ModuleService(Service):
             
         xmit.set_msg(msg)
         await self.put_to_output_q(xmit)    
-
-    async def update_timer_display(self,timer):
-        xmit = xmit_lcd.XmitLcd(fr=self.name)
-        xmit.set_cursor(3,0).set_msg(self.format_timer(timer))
-        await self.put_to_output_q(xmit)
-        
-    # 4 digit time format
-    def format_timer(self,timer):
-        d = "{0}{1}:{2}{3}"
-        return d.format(*timer)
-
-
-        
-
-        

@@ -36,6 +36,8 @@ class Subservice:
     def get_svc(self):
         return self.service
     
+    def reset_prev_display(self):
+        self.prev_display = "                    "
             
     ### Common gain focus and lose focus methods
     ### It's up to the creating service to call these
