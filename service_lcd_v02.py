@@ -49,7 +49,7 @@ class ModuleService(Service):
         
         i2c_controller = 0
         i2c_sda_pin    = int(self.get_parm("i2c0_sda_pin","20"))
-        i2c_scl_pin    = int(self.get_parm("i2c0_sda_pin","21"))
+        i2c_scl_pin    = int(self.get_parm("i2c0_scl_pin","21"))
         i2c_freq       = int(self.get_parm("i2c0_freq", "400_000"))
         
         i2c_addr       = int(self.get_parm("i2c_addr", "0x27"))
