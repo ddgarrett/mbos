@@ -22,7 +22,7 @@ class InvalidPulseCount(Exception):
 
 
 MAX_UNCHANGED = const(100)
-MIN_INTERVAL_US = const(200000)
+MIN_INTERVAL_US = const(1_200_000)
 HIGH_LEVEL = const(50)
 EXPECTED_PULSES = const(84)
 
