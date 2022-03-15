@@ -44,7 +44,7 @@ async def main(parms):
     controller_name = parms["controller"]
     controller_svc = svc_lookup[controller_name]
     
-    pass_cnt = 10
+    pass_cnt = 5
     
     while True:
         
@@ -59,9 +59,14 @@ async def main(parms):
         # And if we're not doing any work, we shouldn't need to run the garbage collection?
         # **MAY** have been caused or made worse by connecting dth11 to 3.3v power instead of 5v?
         # Have switched to 5v power and haven't seen any errors?
+        # Did have errors with 5v. Switched back to 3.3v and changed driver.
+        # Driver minimum checking period was set to .2 sec instead of 1 sec.
         if msg_passed:
-            # await q_log.put(XmitMsg("controller","log","doing gc.collect()"))
-            gc.collect()
+            pass_cnt -= 1
+            if pass_cnt <= 0:
+                pass_cnt = 5
+                # await q_log.put(XmitMsg("controller","log","doing gc.collect()"))
+                gc.collect()
             
         # allow co-routines to execute
         await uasyncio.sleep_ms(0)
