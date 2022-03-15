@@ -61,13 +61,15 @@ class ds1307(object):
     
     def read_time(self):
         t = self.bus.readfrom_mem(int(self.address),int(self.start_reg),7)
+        """
         a = t[0]&0x7F  #second
         b = t[1]&0x7F  #minute
         c = t[2]&0x3F  #hour
         d = t[3]&0x07  #week
         e = t[4]&0x3F  #day
         f = t[5]&0x1F  #month
-        print("20%x/%02x/%02x %02x:%02x:%02x %s" %(t[6],t[5],t[4],t[2],t[1],t[0],self.w[t[3]-1]))
+        """
+        # print("20%x/%02x/%02x %02x:%02x:%02x %s" %(t[6],t[5],t[4],t[2],t[1],t[0],self.w[t[3]-1]))
         
         tp = []
         tp.append( 2000 + self._bcd2dec(t[6])) # year
