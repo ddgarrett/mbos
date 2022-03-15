@@ -45,10 +45,6 @@ class ModuleService(Service):
     async def lose_focus(self):
         await self.stop_time_display()
         await super().lose_focus()
-
-    async def process_ir_input(self,xmit):
-        if xmit.get_msg() == utf8_char.KEY_FORWARD_NEXT_PLAY:
-            await set_time()
             
     async def start_time_display(self):
         if self.display_time_task == None:
@@ -99,6 +95,7 @@ class ModuleService(Service):
             await uasyncio.sleep_ms(1000)
                                 
     # add the modified parts of the time string to the LCD xmit
+    # sending entire string every second was resulting in missed IR input?
     def update_time_display(self,prev_time_str, time_str,xmit):
         
         if prev_time_str == "":
