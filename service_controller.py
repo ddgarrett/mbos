@@ -46,7 +46,7 @@ class ModuleService(Service):
         for svc in svc_lookup.values():
             q_svc_output = svc.get_output_queue()
             
-            if not q_svc_output.empty():
+            while not q_svc_output.empty():
                 xmit = await q_svc_output.get()
                 
                 # pass message to queue for specified service
@@ -70,7 +70,12 @@ class ModuleService(Service):
                     if log_xmit and xmit.to != "log":
                         await self.log_msg(xmit.dumps())
 
-                        
+                # allow co-routines to execute
+                await uasyncio.sleep_ms(0)
+                
+            # allow co-routines to execute
+            await uasyncio.sleep_ms(0)
+            
         return xmit_passed
     
     
