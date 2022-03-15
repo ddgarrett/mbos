@@ -14,6 +14,7 @@ import xmit_lcd
 import xmit_message_handler
 # import xmit_ir_remote
 import utf8_char
+import utime
 
 from dht11 import DHT11, InvalidChecksum
 from machine import Pin
@@ -35,16 +36,19 @@ class ModuleService(Service):
         q_in  = self.get_input_queue()
         q_out = self.get_output_queue()
         
+        ticks_last_update = 0
         while True:
             while not q_in.empty():
                 xmit = await q_in.get()
                 await self.h.process_xmit(xmit, q_out)
                 
             if self.has_focus and self.display_on:
-                await self.update_lcd()
-
                 # Check DHT11 max is every two seconds
-                await uasyncio.sleep_ms(2000)
+                # await uasyncio.sleep_ms(500)
+                ticks_now = utime.ticks_ms()
+                if (ticks_now - ticks_last_update) > 2000:
+                    ticks_last_update = ticks_now
+                    await self.update_lcd()
                 
             await uasyncio.sleep_ms(0)
 
