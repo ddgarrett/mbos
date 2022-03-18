@@ -124,6 +124,20 @@ class Service:
         
         return False
     
+    """
+        Simple services can just override the following three methods.
+        
+        gain_focus() - initialize and begin updating, if any, of LCD
+                     - start any asynchronous tasks
+                   
+        lose_focus() - cleanup, such as cancelling any started tasks
+        
+        process_ir_input(xmit) - handle any IR input not handled by await_ir_input().
+                     By default await_ir_input() will forward any control keys automatically
+                     but this can be overridden by overriding await_ir_input() and calling
+                     super().await_ir_input(...) with custom parms.
+
+    """
     ### common gain focus and lose focus methods
     async def gain_focus(self):
         self.has_focus = True
