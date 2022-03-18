@@ -36,7 +36,7 @@ class ModuleService(Service):
         q_in  = self.get_input_queue()
         q_out = self.get_output_queue()
         
-        ticks_last_update = 0
+        ticks_last_update = utime.ticks_ms()
         while True:
             while not q_in.empty():
                 xmit = await q_in.get()
@@ -46,7 +46,7 @@ class ModuleService(Service):
                 # Check DHT11 max is every two seconds
                 # await uasyncio.sleep_ms(500)
                 ticks_now = utime.ticks_ms()
-                if (ticks_now - ticks_last_update) > 2000:
+                if (ticks_now - ticks_last_update) > 1200:
                     ticks_last_update = ticks_now
                     await self.update_lcd()
                 
