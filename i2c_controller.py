@@ -1,7 +1,8 @@
 from machine import Pin, I2C
-import time
-import _thread
+# import time
+# import _thread
 import sys
+import uasyncio
 
 class I2cController:
     
@@ -48,7 +49,7 @@ class I2cController:
         addr = address of the I2C device to send the message to
         msg  = the UTF-8 encoded string to send
     """
-    def send_msg(self, addr, msg):
+    async def send_msg(self, addr, msg):
         
         rem_bytes = len(msg)
 
@@ -59,29 +60,31 @@ class I2cController:
         msg_pos = 0
         while rem_bytes > 0:
             if rem_bytes <= 16:
-                self.send_block(addr,self.msg[msg_pos:])
-                return
-            
-            self.send_block(addr,self.msg[msg_pos:msg_pos+16])
-            msg_pos = msg_pos + 16
+                self.send_block(addr,msg[msg_pos:])
+            else:
+                self.send_block(addr,msg[msg_pos:msg_pos+16])
+                msg_pos = msg_pos + 16
+                
             rem_bytes = rem_bytes - 16
+            
+            await uasyncio.sleep_ms(0)
             
     """
         Send a block of up to 16 bytes of data.
         Block can be a string or a byte array
     """
     def send_block(self,addr,block):
-        if if type(block) is str:
-            self.i2c.writeto(addr, string_to_bytes(block))
+        if type(block) is str:
+            self.i2c.writeto(addr, self.string_to_bytes(block))
         else:
             self.i2c.writeto(addr, block)
 
     # read a message sent by a responders
     # and return to caller
-    def read_msg(self, addr):
+    async def rcv_msg(self, addr):
         # read first block containing length of message
-        data = self.i2c_controller.readfrom(addr, 4)
-        msg_len = bytes_to_int(data)
+        data = self.i2c.readfrom(addr, 4)
+        msg_len = int.from_bytes(data,sys.byteorder)
                 
         # read 16 byte blocks until the message is completely received
         msg = ""
@@ -90,9 +93,11 @@ class I2cController:
             if msg_len < blk_len:
                 blk_len = msg_len
                 
-            data = self.i2c_controller.readfrom(RESPONDER_ADDRESS, blk_len)
-            msg = msg + bytes_to_string(data)
+            data = self.i2c.readfrom(addr, blk_len)
+            msg = msg + self.bytes_to_string(data)
             msg_len = msg_len - 16
+            
+            await uasyncio.sleep_ms(0)
             
         return msg
 
