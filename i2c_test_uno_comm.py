@@ -3,6 +3,7 @@ from machine import Pin, I2C
 from time import sleep
 import sys
 from i2c_controller import I2cController
+import uasyncio
 
 I2C_CHANNEL = 0
 I2C_SCL_PIN = 21
@@ -37,18 +38,6 @@ print(a.decode())
 print("done")
 """
 
-
-# for send long data
-controller = I2cController(i2c_channel=I2C_CHANNEL,
-                          scl_pin=I2C_SCL_PIN,sda_pin=I2C_SDA_PIN )
-
-# for use with receive for now
-# todo: use the controller.read_msg()
-i2c = controller.i2c
-addr = 0x09 # i2c.scan()[0]
-
-"""
-# test scan
 def format_hex(_object):
     # Format a value or list of values as 2 digit hex.
     try:
@@ -60,23 +49,36 @@ def format_hex(_object):
     
 def to_hex(value):
     return '0x{:02X}'.format(value)
+    
+
+async def main():
+
+    # for send long data
+    controller = I2cController(i2c_channel=I2C_CHANNEL,
+                              scl_pin=I2C_SCL_PIN,sda_pin=I2C_SDA_PIN )
+
+    i2c = controller.i2c
+    
+    # scan I2C bus
+    responder_addresses = controller.scan()
+    print('I2C scan found: ' + format_hex(responder_addresses))
+     
+    addr = 0x09 # i2c.scan()[0]
 
 
-# scan for i2c responders
-print('Scanning I2C Bus for Responders...')
-responder_addresses = controller.scan()
-print('I2C Addresses of Responders found: ' + format_hex(responder_addresses))
-print()
-"""
+    # send data
+    await controller.send_msg(addr,"just a test")
+    print(await controller.rcv_msg(addr))
 
-# send data
-controller.send_msg(addr,"just a test")
-controller.send_msg(addr,"just a test2")
+    await controller.send_msg(addr,"just a test2")
+    print(await controller.rcv_msg(addr))
 
-controller.send_msg(addr,"just a test with longer message")
-controller.send_msg(addr,"just a test with a really really really long message and even longer longer longer yet!")
+    await controller.send_msg(addr,"just a test with longer message")
+    print(await controller.rcv_msg(addr))
 
-# receive data
-# sleep(0.1)
-a = i2c.readfrom(addr, MSG_SIZE)
-print(a.decode())
+    await controller.send_msg(addr,"just a test with a really really really long message and even longer longer longer yet!")
+    print(await controller.rcv_msg(addr))
+
+
+uasyncio.run(main())
+
