@@ -16,13 +16,13 @@
     {"name":"controller", "module":"service_controller",   "q_out_size":10,
         "startup_focus":"menu",  "menu":"menu" },
          
-    {"name":"menu",       "module":"service_menu",     "initial_app":"timer",  
-        "menu":[ "temp", "mem_use", "timer", "clock"]
+    {"name":"menu",       "module":"service_menu",     "initial_app":"temp_humid",  
+        "menu":[ "temp_humid", "mem_use", "timer", "clock"]
         },
         
     {"name":"lcd",        "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
         
-    {"name":"temp",      "module":"service_dht11_v02" },
+    {"name":"temp_humid", "module":"service_dht11_v02" },
         
     {"name":"log",        "module":"service_print",  "q_in_size":1000,  "print_log":1,
       "todo": "make a log to disk version, or have that as an option?" },
