@@ -2,7 +2,7 @@
     Boot up MBOS (Microcontroller Basic OS)
     
     Read parameter file to start up services on the Cores
-
+    
     NOTE: currently only starts up one core.
 """
 

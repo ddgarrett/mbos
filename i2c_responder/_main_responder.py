@@ -10,7 +10,7 @@ import ujson
 import uasyncio
 
 # read the paramter file
-with open("core_0_services.json") as f:
+with open("core_0_responder.json") as f:
         parms = ujson.load(f)
 
 # start main

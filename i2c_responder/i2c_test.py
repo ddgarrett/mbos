@@ -1,7 +1,7 @@
 from machine import Pin, I2C
 import time
 
-import ds1307
+# import ds1307
 
 
 """

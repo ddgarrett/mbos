@@ -1,0 +1,31 @@
+
+{
+"main":"controller",
+"log_xmit": true,
+"controller":"controller",
+"comment" : "This is the responder version of the json parm file",
+
+"defaults": { 
+    "q_in_size":5,
+    "q_out_size":5,
+    "ir_remote": "ir_remote",
+    "lcd_col_cnt":20,
+    "lcd_row_cnt":4
+    },
+
+"services": [
+    {"name":"controller",     "module":"service_controller",   "q_out_size":10,
+        "startup_focus":"menu",     "menu":"menu",     "i2c_svc":"i2c_responder",  },
+         
+    {"name":"menu",           "module":"service_menu",     "initial_app":"i2c_responder",  
+        "menu":[ "i2c_responder", "mem_use"]
+        },
+                
+    {"name":"remote_log",     "module":"service_print",  "q_in_size":1000,  "print_log":1 },
+        
+    {"name":"i2c_responder",  "module":"service_i2c_responder"   },
+         
+    {"name":"mem_use",        "module":"service_mem_use"   }
+         
+    ]
+}
