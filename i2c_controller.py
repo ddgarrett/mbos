@@ -51,18 +51,19 @@ class I2cController:
     """
     async def send_msg(self, addr, msg):
         
-        rem_bytes = len(msg)
+        buff = self.string_to_bytes(msg)
+        rem_bytes = len(buff)
 
         # send message length to receiver
         buffer = bytearray(rem_bytes.to_bytes(4,sys.byteorder))
-        self.send_block(addr, buffer)
+        self.i2c.writeto(addr, buffer)
         
         msg_pos = 0
         while rem_bytes > 0:
             if rem_bytes <= 16:
-                self.send_block(addr,msg[msg_pos:])
+                self.send_block(addr,buff[msg_pos:])
             else:
-                self.send_block(addr,msg[msg_pos:msg_pos+16])
+                self.send_block(addr,buff[msg_pos:msg_pos+16])
                 msg_pos = msg_pos + 16
                 
             rem_bytes = rem_bytes - 16
@@ -74,10 +75,7 @@ class I2cController:
         Block can be a string or a byte array
     """
     def send_block(self,addr,block):
-        if type(block) is str:
-            self.i2c.writeto(addr, self.string_to_bytes(block))
-        else:
-            self.i2c.writeto(addr, block)
+        self.i2c.writeto(addr, block)
 
     # read a message sent by a responders
     # and return to caller
@@ -85,24 +83,28 @@ class I2cController:
         # read first block containing length of message
         data = self.i2c.readfrom(addr, 4)
         msg_len = int.from_bytes(data,sys.byteorder)
+        print("rcv len: ",end="")
+        print(msg_len)
                 
         # read 16 byte blocks until the message is completely received
+        data = bytearray(b'')
         msg = ""
         while (msg_len > 0):
             blk_len = 16
             if msg_len < blk_len:
                 blk_len = msg_len
                 
-            data = self.i2c.readfrom(addr, blk_len)
-            msg = msg + self.bytes_to_string(data)
-            msg_len = msg_len - 16
+            blk = self.i2c.readfrom(addr, blk_len)
+            data = data +  blk
+            msg_len = msg_len - len(blk)
             
             await uasyncio.sleep_ms(0)
             
-        return msg
+        print(data)
+        return self.bytes_to_string(bytearray(data))
 
     def string_to_bytes(self,a_string):
-        return bytearray(a_string.encode())
+        return bytearray(a_string.encode('utf8'))
     
     def bytes_to_string(self,byte_array):
-        return byte_array.decode()
+        return byte_array.decode('utf8')

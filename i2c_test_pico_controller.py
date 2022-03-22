@@ -5,6 +5,8 @@ import sys
 from i2c_controller import I2cController
 import uasyncio
 
+from xmit_message import XmitMsg
+
 I2C_CHANNEL = 0
 I2C_SCL_PIN = 21
 I2C_SDA_PIN = 20
@@ -41,6 +43,7 @@ async def main():
     addr = 0x41
 
 
+    """
     # send data
     await controller.send_msg(addr,"just a test")
     print(await controller.rcv_msg(addr))
@@ -53,6 +56,26 @@ async def main():
 
     await controller.send_msg(addr,"just a test with a really really really long message and even longer longer longer yet!")
     print(await controller.rcv_msg(addr))
+    """
+    
+    # Test xmit wrap and unwrap
+    
+    # NOTE: having problem with utf8 encoding?
+    
+    # xmit_msg = """["temp_humid", "lcd", "<class 'XmitLcd'>", [{"cursor": [8, 0]}, {"msg": " 71.7°F"}, {"cursor": [12, 1]}, {"msg": "46%"}]]"""
+    xmit_msg = """["temp_humid", "lcd", "<class 'XmitLcd'>", ["clear", {"msg": "⏶ Temp:\n⏷ Humidity:"}]]"""
+    await controller.send_msg(addr,xmit_msg)
+    msg = await controller.rcv_msg(addr)
+    print("msg: " + msg)
+    
+    print("creating new xmit")
+    xmit = XmitMsg(msg=msg)
+    xmit.unwrapMsg()
+    print("new xmit: "+xmit.dumps())
+    
+    msg = xmit.get_msg()
+    print(type(msg))
+    print(msg)
 
 
 uasyncio.run(main())

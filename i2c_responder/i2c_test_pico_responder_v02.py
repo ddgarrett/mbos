@@ -42,7 +42,7 @@ async def main():
         # is controller waiting for us to send data?
         while i2c_responder.read_is_pending():
             # send the last message received
-            last_msg = "pico2 rcvd: " + last_msg
+            # last_msg = "pico2 rcvd: " + last_msg
             print("sending msg: " + last_msg)
             await i2c_responder.send_msg(last_msg)
             last_msg = ""
@@ -50,7 +50,9 @@ async def main():
         # is controller trying to send us some data?
         while i2c_responder.write_data_is_available():
             last_msg = await i2c_responder.rcv_msg()
-            print("read msg: " + last_msg)
+            print("rcvd msg( ",end="")
+            print(len(last_msg),end="")
+            print(") : " + last_msg )
             
         await uasyncio.sleep_ms(0)
         

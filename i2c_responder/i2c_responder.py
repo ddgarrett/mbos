@@ -203,18 +203,21 @@ class I2CResponder:
     async def send_msg(self, msg):
         
         # send length of message
-        rem_bytes = len(msg)
-        self.buffer[0:4] = bytearray(rem_bytes.to_bytes(4,sys.byteorder))
-        await self.send_bytes(self.buffer[0:4])
+        # UTF8 may have multibyte characters
+        buff = bytearray(msg.encode('utf8'))
+        rem_bytes = len(buff)
+        
+        len_buff = bytearray(rem_bytes.to_bytes(4,sys.byteorder))
+        await self.send_bytes(len_buff)
         
         # send message
         msg_pos = 0
         while rem_bytes > 0:
             if rem_bytes <= 16:
-                await self.send_str(msg[msg_pos:])
+                await self.send_bytes(buff[msg_pos:])
                 return
             
-            await self.send_str(msg[msg_pos:msg_pos+16])
+            await self.send_bytes(buff[msg_pos:msg_pos+16])
             msg_pos = msg_pos + 16
             rem_bytes = rem_bytes - 16
             
@@ -229,16 +232,8 @@ class I2CResponder:
                 
             self.put_read_data(value)
                 
-    async def send_str(self,str_out):
-        for value in str_out:
-            # loop (polling) until the Controller issues an I2C READ.
-            while not self.read_is_pending():
-                await uasyncio.sleep_ms(0)
-                
-            self.put_read_data(ord(value))
-
     """
-        Read a long message to the Controller
+        Read a long message from the Controller
         16 bytes at a time.
         
         First read 4 byte length of message.
@@ -256,21 +251,13 @@ class I2CResponder:
         
         # receive message
         while rem_bytes > 0:
-            b = await self.rcv_block()        
-            data = data + b
+            b = self.get_write_data(max_size=16)        
+            data += b
             rem_bytes = rem_bytes - len(b)
             
-        r =  "".join(str(chr(c)) for c in data)
-        return r
+        # print(data)
             
-    """
-        Receive a block of up to 16 bytes of data
-    """
-    async def rcv_block(self):
+        return bytearray(data).decode("utf8")
 
-        while not self.write_data_is_available():
-            await uasyncio.sleep_ms(0)
-        
-        return self.get_write_data(max_size=16)
        
         
