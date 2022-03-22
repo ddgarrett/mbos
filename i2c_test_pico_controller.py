@@ -1,6 +1,6 @@
  
 from machine import Pin, I2C
-from time import sleep
+import utime
 import sys
 from i2c_controller import I2cController
 import uasyncio
@@ -76,6 +76,32 @@ async def main():
     msg = xmit.get_msg()
     print(type(msg))
     print(msg)
+    
+    # time round trip
+    ticks_start = utime.ticks_us()
+    
+    xmit_msg = """["temp_humid", "lcd", "<class 'XmitLcd'>", ["clear", {"msg": "⏶ Temp:\n⏷ Humidity:"}]]"""
+    await controller.send_msg(addr,xmit_msg)
+    await controller.rcv_msg(addr)
+    
+    await controller.send_msg(addr,xmit_msg)
+    await controller.rcv_msg(addr)
+    
+    await controller.send_msg(addr,xmit_msg)
+    await controller.rcv_msg(addr)
+    
+    await controller.send_msg(addr,xmit_msg)
+    await controller.rcv_msg(addr)
+    
+    await controller.send_msg(addr,xmit_msg)
+    await controller.rcv_msg(addr)
+    
+    await controller.send_msg(addr,xmit_msg)
+    await controller.rcv_msg(addr)
+    
+    ticks = (utime.ticks_us() - ticks_start)/6
+    print(ticks)
+
 
 
 uasyncio.run(main())
