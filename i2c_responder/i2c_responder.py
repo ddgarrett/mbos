@@ -198,7 +198,7 @@ class I2CResponder:
         16 bytes at a time.
         
         First send 4 byte length of message.
-        Then send message 16 bytes at a time.
+        Then send blocks of up to 16 bytes.
     """
     async def send_msg(self, msg):
         
@@ -218,8 +218,8 @@ class I2CResponder:
                 return
             
             await self.send_bytes(buff[msg_pos:msg_pos+16])
-            msg_pos = msg_pos + 16
-            rem_bytes = rem_bytes - 16
+            msg_pos += 16
+            rem_bytes -= 16
             
     """
         Send a block bytes of up to 16 bytes of data
@@ -254,8 +254,7 @@ class I2CResponder:
             b = self.get_write_data(max_size=16)        
             data += b
             rem_bytes = rem_bytes - len(b)
-            
-        # print(data)
+
             
         return bytearray(data).decode("utf8")
 
