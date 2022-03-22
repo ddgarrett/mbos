@@ -2,7 +2,7 @@
 {
 "main":"controller",
 "log_xmit": true,
-"controller":"controller",
+"controller":"controller", "todo":"change name to controller_svc?",
 
 "defaults": { 
     "q_in_size":5,
@@ -20,6 +20,8 @@
         "menu":[ "temp_humid", "mem_use", "timer", "clock"]
         },
         
+    {"name":"i2c_svc",    "module":"service_i2c_controller" },
+
     {"name":"lcd",        "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
         
     {"name":"temp_humid", "module":"service_dht11_v02" },
