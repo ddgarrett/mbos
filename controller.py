@@ -51,16 +51,6 @@ async def main(parms):
         # msg_passed true if a message is passed from one service to another
         msg_passed = await controller_svc.poll_output_queues(svc_lookup, log_xmit)      
         
-        # TODO: find out why gc.collect() causes DHT11 sensor to have errors.
-        # Doing garbage collection too frequently seemed to cause problems for the DHT11 Service?
-        # Doing it only if a message was actually passed reduced frequency of problem?
-        # But, as we pass more messages, problem may reoccur?
-        # In any case, if we're not passing messages we're not doing any work.
-        # And if we're not doing any work, we shouldn't need to run the garbage collection?
-        # **MAY** have been caused or made worse by connecting dth11 to 3.3v power instead of 5v?
-        # Have switched to 5v power and haven't seen any errors?
-        # Did have errors with 5v. Switched back to 3.3v and changed driver.
-        # Driver minimum checking period was set to .2 sec instead of 1 sec.
         if msg_passed:
             pass_cnt -= 1
             if pass_cnt <= 0:
