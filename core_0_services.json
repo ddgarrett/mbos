@@ -2,14 +2,22 @@
 {
 "main":"controller",
 "log_xmit": true,
-"controller":"controller", "todo":"change name to controller_svc?",
+"controller":"controller", "controller todo":"change name to controller_svc?",
+
+
 
 "defaults": { 
     "q_in_size":5,
     "q_out_size":5,
-    "ir_remote": "ir_remote",
+    
+    "ir_remote": "ir_remote",  "ir_remote note": "change to input_device?",
+    
     "lcd_col_cnt":20,
-    "lcd_row_cnt":4
+    "lcd_row_cnt":4,
+    
+    "i2c_sda_pin":20, 
+    "i2c_scl_pin":21
+    
     },
 
 "services": [
@@ -17,16 +25,21 @@
         "startup_focus":"menu",  "menu":"menu" },
          
     {"name":"menu",       "module":"service_menu",     "initial_app":"temp_humid",  
-        "menu":[ "temp_humid", "mem_use", "timer", "clock"]
+        "menu":[ "temp_humid", "mem_use", "timer", "clock", "test_i2c"]
         },
         
-    {"name":"i2c_svc",    "module":"service_i2c_controller" },
-
+    {"name":"i2c_svc",    "module":"service_i2c_controller", "q_in_size":10, "q_out_size":10,
+     "resp_addr":["0x41"] },
+     
+    {"name":"remote_log", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" },
+        
+    {"name":"test_i2c",   "module":"svc_test_i2c"},
+        
     {"name":"lcd",        "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
         
     {"name":"temp_humid", "module":"service_dht11_v02" },
         
-    {"name":"log",        "module":"service_print",  "q_in_size":1000,  "print_log":1,
+    {"name":"log",        "module":"service_print",  "q_in_size":100,  "print_log":1,
       "todo": "make a log to disk version, or have that as an option?" },
         
     {"name":"ir_remote",  "module":"service_ir",     "key_map":"ir_mapping_koobook.json" },
