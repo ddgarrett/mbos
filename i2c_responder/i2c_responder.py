@@ -210,9 +210,14 @@ class I2CResponder:
         len_buff = bytearray(rem_bytes.to_bytes(4,sys.byteorder))
         await self.send_bytes(len_buff)
         
+        # print("sending: " + str(len_buff))
+        
         # send message
         msg_pos = 0
-        while rem_bytes > 0:
+        
+        # if controller no longer requesting input
+        # stop sending data
+        while rem_bytes > 0: # and self.read_is_pending():
             if rem_bytes <= 16:
                 await self.send_bytes(buff[msg_pos:])
                 return
@@ -228,8 +233,12 @@ class I2CResponder:
         for value in buffer_out:
             # loop (polling) until the Controller issues an I2C READ.
             while not self.read_is_pending():
-                await uasyncio.sleep_ms(0)
-                
+               await uasyncio.sleep_ms(0)
+            
+            # stop sending if controller no longer soliciting input
+            # if not self.read_is_pending():
+            #    return
+            
             self.put_read_data(value)
                 
     """
@@ -250,12 +259,11 @@ class I2CResponder:
         data = []
         
         # receive message
-        while rem_bytes > 0:
+        while rem_bytes > 0: # and self.write_data_is_available():
             b = self.get_write_data(max_size=16)        
             data += b
             rem_bytes = rem_bytes - len(b)
 
-            
         return bytearray(data).decode("utf8")
 
        

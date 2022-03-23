@@ -64,37 +64,59 @@ async def main():
     
     # xmit_msg = """["temp_humid", "lcd", "<class 'XmitLcd'>", [{"cursor": [8, 0]}, {"msg": " 71.7°F"}, {"cursor": [12, 1]}, {"msg": "46%"}]]"""
     xmit_msg = """["temp_humid", "lcd", "<class 'XmitLcd'>", ["clear", {"msg": "⏶ Temp:\n⏷ Humidity:"}]]"""
+    
+    print("sending msg")
+    
     await controller.send_msg(addr,xmit_msg)
+    
+    print("receiving msg")
+    
     msg = await controller.rcv_msg(addr)
     print("msg: " + msg)
     
-    print("creating new xmit")
-    xmit = XmitMsg(msg=msg)
-    xmit.unwrapMsg()
-    print("new xmit: "+xmit.dumps())
+    if len(msg) > 0:
+        print("creating new xmit")
+        xmit = XmitMsg(msg=msg)
+        xmit.unwrapMsg()
+        print("new xmit: "+xmit.dumps())
+        msg = xmit.get_msg()
+        print(type(msg))
+        print(msg)
+    else:
+        print("zero length msg received")
     
-    msg = xmit.get_msg()
-    print(type(msg))
-    print(msg)
-    
+
+    return
     # time round trip
     ticks_start = utime.ticks_us()
+    
+    print("sending msg 1")
     
     xmit_msg = """["temp_humid", "lcd", "<class 'XmitLcd'>", ["clear", {"msg": "⏶ Temp:\n⏷ Humidity:"}]]"""
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)
     
-    await controller.send_msg(addr,xmit_msg)
-    await controller.rcv_msg(addr)
+    print("sending msg 2")
     
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)
     
-    await controller.send_msg(addr,xmit_msg)
-    await controller.rcv_msg(addr)
+    print("sending msg 3")
     
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)
+    
+    print("sending msg 4")
+    
+    await controller.send_msg(addr,xmit_msg)
+    await controller.rcv_msg(addr)
+    
+    print("sending msg 5")
+    
+    await controller.send_msg(addr,xmit_msg)
+    await controller.rcv_msg(addr)
+    
+    print("sending msg 6")
     
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)

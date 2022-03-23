@@ -52,7 +52,7 @@ class XmitMsg:
             to = self.to
             
         new_msg = self.dumps()
-        return XmitMsg(fr=fr,to=to,msg= new_msg)
+        return XmitMsg(fr=fr,to=to,msg=new_msg)
     
     # unwrap a previous wrapped message
     def unwrapMsg(self):
@@ -70,6 +70,8 @@ class XmitMsg:
         """
         
         self.msg = xmit_data[3]
+        
+        return self
             
         # print("type xmit_data[2]" + str(type(xmit_data[2])))
             

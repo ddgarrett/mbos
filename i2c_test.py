@@ -1,7 +1,7 @@
 from machine import Pin, I2C
-import time
+import utime
 
-import ds1307
+# import ds1307
 
 
 """
@@ -40,11 +40,35 @@ def format_hex(_object):
 # Demonstrate that the Responder is responding at its assigned I2C address.
 # -----------------
 print('Scanning I2C Bus for Responders...')
-responder_addresses = i2c_controller.scan()
-print('I2C Addresses of Responders found: ' + format_hex(responder_addresses))
+
+ticks_start = utime.ticks_us()
+
+resp_addr = i2c_controller.scan()
+resp_addr = i2c_controller.scan()
+resp_addr = i2c_controller.scan()
+resp_addr = i2c_controller.scan()
+resp_addr = i2c_controller.scan()
+resp_addr = i2c_controller.scan()
+resp_addr = i2c_controller.scan()
+resp_addr = i2c_controller.scan()
+resp_addr = i2c_controller.scan()
+resp_addr = i2c_controller.scan()
+
+diff = (utime.ticks_us() - ticks_start)/10
+
+print('I2C Addresses of Responders found: ' , end='')
+print(resp_addr, end='')
+print(' in {0:,.0f} μsec'.format(diff))
+
+# arg... this shows 18,625 micro seconds, or 18.625ms per scan
+# so we can't do this every loop
+# alternative - start a separate thread and check it every so often to see if it is hung?
+
+
+# print('I2C Addresses of Responders found: ' + format_hex(resp_addr))
 print()
 
-rtc_addr = 0x68
+# rtc_addr = 0x68
 
 # x = input("Year : ")
 
