@@ -238,6 +238,11 @@ class Service:
                     
             await uasyncio.sleep_ms(0)
         
+    ## Get an instance of the I2C object using standard parms
+    def get_i2c(self):
+        return self.get_parm("i2c",None)
+          
+            
     ## return a value for a parameter in the original .json file
     ##    or the default parm value if parm was not in the .json file
     def get_parm(self, parm_name, parm_default):

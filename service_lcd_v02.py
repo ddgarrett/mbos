@@ -47,10 +47,12 @@ class ModuleService(Service):
         #
         # use pico_i2c_lcd instead of LCD1602
         
+        """
         i2c_controller = 0
         i2c_sda_pin    = int(self.get_parm("i2c0_sda_pin","20"))
         i2c_scl_pin    = int(self.get_parm("i2c0_scl_pin","21"))
         i2c_freq       = int(self.get_parm("i2c0_freq", "400_000"))
+        """
         
         i2c_addr       = int(self.get_parm("i2c_addr", "0x27"))
         lcd_row_cnt    = int(self.get_parm("lcd_row_cnt", "2"))
@@ -58,10 +60,13 @@ class ModuleService(Service):
         
         
         
+        i2c = self.get_i2c()
+        
+        """
         i2c = I2C(i2c_controller, sda=Pin(i2c_sda_pin),
                   scl=Pin(i2c_scl_pin), freq=i2c_freq)
+        """
 
-        
         self.lcd = I2cLcd(i2c, i2c_addr, lcd_row_cnt, lcd_col_cnt)
         
         self.backlight_on   = True
@@ -119,7 +124,7 @@ class ModuleService(Service):
                 self.process_msg(msg)
 
             # give co-processes a chance to run
-            await uasyncio.sleep_ms(1)
+            await uasyncio.sleep_ms(0)
                     
     def process_msg(self, xmit_msg):
             

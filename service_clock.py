@@ -121,6 +121,8 @@ class ModuleService(Service):
     # does not have a battery.
     async def set_time(self):
         rtc = ds1307.ds1307(I2C_PORT,I2C_SCL,I2C_SDA)
+        rtc.bus = self.get_i2c()
+        
         t = rtc.read_time()
         
         rtc_pico = machine.RTC()

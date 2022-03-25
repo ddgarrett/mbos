@@ -15,15 +15,34 @@
 
 import uasyncio
 from xmit_message import XmitMsg
+from machine import Pin, I2C
 import gc
 
+def get_parm(parms, parm_name, parm_default):
+    if parm_name in parms:
+        return parms[parm_name]
+    
+    return parm_default
+
+def get_i2c(parms):
+    bus  = get_parm(parms,"i2c_bus",0)
+    sda  = get_parm(parms,"i2c_sda_pin",0)
+    scl  = get_parm(parms,"i2c_scl_pin",1)
+    freq = get_parm(parms,"i2c_freq",100_000)
+    
+    return I2C(bus, sda=Pin(sda), scl=Pin(scl), freq=freq)
+        
 async def main(parms):
     
+    print("ctrl: creating I2C object")
+    defaults = parms["defaults"]
+    defaults["i2c"] = get_i2c(defaults)
+        
     # Create svc_lookup, a dictionary of Services
     # where the servcie can be looked up by name
     print("ctrl: creating lookup list of Services")
     svc_lookup = {}
-    defaults = parms["defaults"]
+
     for svc_parms in parms["services"]:
         print("... "+svc_parms['name']) # show name of service being started
         svc_parms["defaults"] = defaults  # every service has access to defaults
