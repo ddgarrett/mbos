@@ -15,8 +15,10 @@
     "lcd_col_cnt":20,
     "lcd_row_cnt":4,
     
+    "i2c_bus"    :0,
     "i2c_sda_pin":20, 
-    "i2c_scl_pin":21
+    "i2c_scl_pin":21,
+    "ic2_freq"   :100000
     
     },
 
@@ -25,7 +27,7 @@
         "startup_focus":"menu",  "menu":"menu" },
          
     {"name":"menu",       "module":"service_menu",     "initial_app":"temp_humid",  
-        "menu":[ "temp_humid", "mem_use", "timer", "clock", "test_i2c"]
+        "menu":[ "temp_humid", "mem_use", "timer", "clock", "test_i2c", "gyro"]
         },
         
     {"name":"i2c_svc",    "module":"service_i2c_controller", "q_in_size":10, "q_out_size":10,
@@ -38,6 +40,8 @@
     {"name":"lcd",        "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
         
     {"name":"temp_humid", "module":"service_dht11_v02" },
+        
+    {"name":"gyro",       "module":"svc_gyro_v01", "device_addr":1},
         
     {"name":"log",        "module":"service_print",  "q_in_size":100,  "print_log":1,
       "todo": "make a log to disk version, or have that as an option?" },
