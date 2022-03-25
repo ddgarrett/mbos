@@ -26,6 +26,9 @@ class ModuleService(Service):
         super().__init__(svc_parms)
         self.sensor = DHT11(Pin(16, Pin.OUT, Pin.PULL_DOWN))
         self.display_task = None
+        
+        self.last_temp = None
+        self.last_humid = None
 
     async def gain_focus(self):
         await super().gain_focus()
@@ -49,6 +52,9 @@ class ModuleService(Service):
         msg = xmit_lcd.XmitLcd(fr=self.name)
         msg.clear_screen().set_msg("⏶ Temp:\n⏷ Humidity:")
         await self.put_to_output_q(msg)
+        
+        self.last_temp = None
+        self.last_humid = None
 
     # asynchronous task to update data on LCD
     async def display_data(self):
@@ -61,7 +67,7 @@ class ModuleService(Service):
                 ticks_last_update = ticks_now
                 await self.update_lcd()
                 
-            await uasyncio.sleep_ms(250)            
+            await uasyncio.sleep_ms(10)            
 
     # update LCD temp/humidity values
     async def update_lcd(self):
@@ -74,18 +80,23 @@ class ModuleService(Service):
             humidity = self.sensor.humidity
         except Exception as e:
             update_ok = False
-            await self.log_msg(e)
+            # await self.log_msg(e)
         
         if update_ok:
             # adjustments based on comparison to commercial product
             temp = temp - 1.7
             humidity = humidity + 10
             
-            msg = xmit_lcd.XmitLcd(fr=self.name)
-            msg.set_cursor(8,0).set_msg("{: .1f}°F".format(temp))
-            msg.set_cursor(12,1).set_msg("{:.0f}%".format(humidity))
-            
-            await self.put_to_output_q(msg)
+            # don't send a message unless last temperature or humidity have changed
+            if self.last_temp != temp or self.last_humid != humidity:
+                msg = xmit_lcd.XmitLcd(fr=self.name)
+                msg.set_cursor(8,0).set_msg("{: .1f}°F".format(temp))
+                msg.set_cursor(12,1).set_msg("{:.0f}%".format(humidity))
+                
+                await self.put_to_output_q(msg)
+                
+                self.last_temp = temp
+                self.last_humid = humidity
 
 
 
