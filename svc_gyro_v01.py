@@ -24,6 +24,8 @@ class ModuleService(Service):
         
         dev_addr = self.get_parm("device_addr",0)
         self.imu = MPU6050(self.get_i2c(),device_addr=dev_addr)
+        
+        self.adj_x = self.get_parm("adj_x",0)
 
 
     async def gain_focus(self):
@@ -65,9 +67,13 @@ class ModuleService(Service):
                 
                 ts = utime.ticks_ms()
                 
-                ax=int(round(self.imu.accel.x*90))
-                ay=int(round(self.imu.accel.y*90))
-                temp=round((self.imu.temperature* 1.8 + 32),1)
+                ax=int(round(self.imu.accel.x*90/4))
+                ay=int(round(self.imu.accel.y*90/4))
+                temp=round((self.imu.temperature* 1.8 + 32))
+                
+                # try rounding to the nearest 4 degrees
+                ax = ax*4 + self.adj_x
+                ay = ay*4
 
                 axs   = "{:d}".format(ax)
                 ays   = "{:d}".format(ay)

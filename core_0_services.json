@@ -41,7 +41,7 @@
         
     {"name":"temp_humid", "module":"service_dht11_v02" },
         
-    {"name":"gyro",       "module":"svc_gyro_v01", "device_addr":1},
+    {"name":"gyro",       "module":"svc_gyro_v01", "device_addr":1, "adj_x":-4},
         
     {"name":"log",        "module":"service_print",  "q_in_size":100,  "print_log":1,
       "todo": "make a log to disk version, or have that as an option?" },
