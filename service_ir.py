@@ -9,6 +9,7 @@ from service import Service
 import queue
 import uasyncio
 import ujson
+import utime
 import xmit_lcd
 from ir_rx.nec import NEC_16
 from machine import Pin
@@ -52,6 +53,8 @@ class ModuleService(Service):
     async def run(self):
         q_input = self.get_input_queue()
         
+        ts = utime.ticks_ms()
+        
         while True:
 
             # Don't expect any input messages, so
@@ -59,11 +62,13 @@ class ModuleService(Service):
             while not q_input.empty():
                 xmit_msg = await q_input.get()
                 
-            if self.data != None:
+            if (self.data != None
+            and utime.ticks_diff(utime.ticks_ms(), ts) > 250):
+                ts = utime.ticks_ms()
                 await self.send_key(self.data)
                 self.data = None
                 
-            await uasyncio.sleep_ms(250)
+            await uasyncio.sleep_ms(0)
              
     # send a key to the focus service
     async def send_key(self, key):
