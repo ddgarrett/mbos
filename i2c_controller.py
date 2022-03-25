@@ -53,23 +53,32 @@ class I2cController:
         
         buff = bytearray(msg.encode('utf8'))
         rem_bytes = len(buff)
-        writeblk = self.i2c.writeto  # slight performance boost
+        # writeblk = self.i2c.writeto  # slight performance boost
 
         # send message length to receiver
         buffer = bytearray(rem_bytes.to_bytes(4,sys.byteorder))
-        writeblk(addr, buffer)
+        self.i2c.writeto(addr, buffer)
         
         msg_pos = 0
         while rem_bytes > 0:
             if rem_bytes <= 16:
-                writeblk(addr,buff[msg_pos:])
+                self.i2c.writeto(addr,buff[msg_pos:])
+                print("wrote ",end="")
+                print(buff[msg_pos:])
             else:
-                writeblk(addr,buff[msg_pos:msg_pos+16])
+                self.i2c.writeto(addr,buff[msg_pos:msg_pos+16])
+                print("wrote ",end="")
+                print(buff[msg_pos:msg_pos+16])
                 msg_pos = msg_pos + 16
+                
                 
             rem_bytes = rem_bytes - 16
             
-            await uasyncio.sleep_ms(0) # play nice with coroutines
+            # May be causing problems?
+            # try waiting to give receiver time to receive?
+            await uasyncio.sleep_ms(1)
+            
+            # await uasyncio.sleep_ms(0) # play nice with coroutines
             
     # read a message sent by a responders
     # and return to caller
@@ -92,7 +101,8 @@ class I2cController:
             data = data +  blk
             msg_len = msg_len - len(blk)
             
-            await uasyncio.sleep_ms(0) # play nice with coroutines
+            # Give sender time to send?
+            await uasyncio.sleep_ms(1) # play nice with coroutines
             
         return bytearray(data).decode('utf8')
 

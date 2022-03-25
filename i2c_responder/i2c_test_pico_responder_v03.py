@@ -37,6 +37,8 @@ async def main():
 
     last_msg = ""
     
+    awaiting_io_printed = False
+    
     # Check for Controller sending data
     # or requesting data
     while True:
@@ -52,6 +54,7 @@ async def main():
             # echo last msg
             await i2c_responder.send_msg(last_msg)
             last_msg = ""
+            print(".",end="")
  
             
             # don't echo last xmit
@@ -65,7 +68,13 @@ async def main():
             print(len(last_msg),end="")
             print("): " + last_msg )
             
+
+            
         await uasyncio.sleep_ms(0)
+        
+        if last_msg == "" and not awaiting_io_printed:
+            print("awaiting io")
+            awaiting_io_printed = True
         
 
 if __name__ == "__main__":
