@@ -32,9 +32,11 @@ class ModuleService(Service):
     def __init__(self, svc_parms):
         super().__init__(svc_parms)
         
-        scl = self.get_parm("i2c_scl_pin",1)
-        sda = self.get_parm("i2c_sda_pin",0)
-        self.controller = I2cController(scl_pin=scl, sda_pin=sda )
+        # scl = self.get_parm("i2c_scl_pin",1)
+        # sda = self.get_parm("i2c_sda_pin",0)
+        # self.controller = I2cController(scl_pin=scl, sda_pin=sda )
+        
+        self.controller = self.get_i2c()
         
         # responder addresses
         addr = self.get_parm("resp_addr",[])
