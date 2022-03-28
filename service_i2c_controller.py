@@ -36,7 +36,10 @@ class ModuleService(Service):
         # sda = self.get_parm("i2c_sda_pin",0)
         # self.controller = I2cController(scl_pin=scl, sda_pin=sda )
         
-        self.controller = self.get_i2c()
+        i2c = self.get_i2c()
+        self.controller = I2cController(i2c=i2c )
+        
+        # self.controller = self.get_i2c()
         
         # responder addresses
         addr = self.get_parm("resp_addr",[])
@@ -76,9 +79,9 @@ class ModuleService(Service):
                 
                 if i2c_addr in poll_addr:
                     await self.controller.send_msg(i2c_addr,msg)
-                    print("ctl sent: " + msg + " to " + str(i2c_addr))
+                    await self.log_msg("ctl sent: " + msg + " to " + str(i2c_addr))
                 else:
-                    print("skipped msg: " + msg)
+                    await self.log_msg("skipped msg: " + msg)
                 
                 await uasyncio.sleep_ms(0)
                 

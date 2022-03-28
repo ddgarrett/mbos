@@ -39,7 +39,7 @@ class ModuleService(Service):
             if not q_in.empty():
                 xmit = await q_in.get()
                 
-                print("stub fwd: " + xmit.dumps())
+                await self.log_msg("stub fwd: " + xmit.dumps())
                 
                 xmit = xmit.wrapXmit(fr=self.name, to="i2c_svc")
                 msg = xmit.get_msg()

@@ -3,7 +3,7 @@
     I2CResponder Test Application.
     
     Test receives from the service_i2c_controller
-                          I                                                 I
+  
 """
 
 # Standard Library
@@ -45,16 +45,19 @@ async def main():
         
         # is controller waiting for us to send data?
         while i2c_responder.read_is_pending():
+            """
             if len(last_msg) > 0:
                 print("snd msg (",end="")
                 print(len(last_msg),end="")
                 print("): " + last_msg)
+            """
                 
             # reply even if last msg was empty string
             # echo last msg
-            await i2c_responder.send_msg(last_msg)
+            # await i2c_responder.send_msg(last_msg)
+            await i2c_responder.send_msg("")
             last_msg = ""
-            print(".",end="")
+            # print(".",end="")
  
             
             # don't echo last xmit

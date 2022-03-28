@@ -3,6 +3,7 @@ from machine import Pin, I2C
 # import _thread
 import sys
 import uasyncio
+import gc
 
 class I2cController:
     
@@ -24,16 +25,21 @@ class I2cController:
 
     """
     
-    VERSION = "0.0.1"
+    VERSION = "0.0.2"
         
-    def __init__(self, i2c_channel=0, scl_pin=1, sda_pin=0, i2c_freq=100_000):
+    # add ability to pass in an existing i2c controller
+    # If specified, will use that instead of creating a new one
+    def __init__(self, i2c_channel=0, scl_pin=1, sda_pin=0, i2c_freq=100_000, i2c=None):
         
-        self.i2c = I2C(
-            i2c_channel,
-            scl=Pin(scl_pin),
-            sda=Pin(sda_pin),
-            freq=i2c_freq
-        )
+        if i2c == None:
+            self.i2c = I2C(
+                i2c_channel,
+                scl=Pin(scl_pin),
+                sda=Pin(sda_pin),
+                freq=i2c_freq
+            )
+        else:
+            self.i2c = i2c
         
 
     # Scan I2C network to find any IC2 Responders.
@@ -51,6 +57,9 @@ class I2cController:
     """
     async def send_msg(self, addr, msg):
         
+        # avoid garbage collection during a transmit?
+        gc.collect()
+        
         buff = bytearray(msg.encode('utf8'))
         rem_bytes = len(buff)
         # writeblk = self.i2c.writeto  # slight performance boost
@@ -63,12 +72,12 @@ class I2cController:
         while rem_bytes > 0:
             if rem_bytes <= 16:
                 self.i2c.writeto(addr,buff[msg_pos:])
-                print("wrote ",end="")
-                print(buff[msg_pos:])
+                # print("wrote ",end="")
+                # print(buff[msg_pos:])
             else:
                 self.i2c.writeto(addr,buff[msg_pos:msg_pos+16])
-                print("wrote ",end="")
-                print(buff[msg_pos:msg_pos+16])
+                # print("wrote ",end="")
+                # print(buff[msg_pos:msg_pos+16])
                 msg_pos = msg_pos + 16
                 
                 
@@ -76,7 +85,7 @@ class I2cController:
             
             # May be causing problems?
             # try waiting to give receiver time to receive?
-            await uasyncio.sleep_ms(1)
+            await uasyncio.sleep_ms(2)
             
             # await uasyncio.sleep_ms(0) # play nice with coroutines
             
@@ -89,7 +98,9 @@ class I2cController:
         data = readblk(addr, 4)
         msg_len = int.from_bytes(data,sys.byteorder)
 
-
+        # print("read msg len=",end="")
+        # print(msg_len)
+        
         # read 16 byte blocks until the message is completely received
         data = bytearray(b'')
         while (msg_len > 0):
@@ -100,6 +111,11 @@ class I2cController:
             blk = readblk(addr, blk_len)
             data = data +  blk
             msg_len = msg_len - len(blk)
+            
+            # print("read: ",end="")
+            # print(data,end="")
+            # print(", remain: ",end="")
+            # print(msg_len)
             
             # Give sender time to send?
             await uasyncio.sleep_ms(1) # play nice with coroutines

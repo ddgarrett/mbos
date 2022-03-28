@@ -74,6 +74,7 @@ async def main():
     msg = await controller.rcv_msg(addr)
     print("msg: " + msg)
     
+    """
     if len(msg) > 0:
         print("creating new xmit")
         xmit = XmitMsg(msg=msg)
@@ -84,6 +85,7 @@ async def main():
         print(msg)
     else:
         print("zero length msg received")
+    """
     
 
     return

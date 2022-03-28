@@ -269,17 +269,21 @@ class I2CResponder:
             rem_bytes = rem_bytes - len(b)
             
             if len(b) == 0:
-                print(".",end="")
-                await uasyncio.sleep_ms(100)
+                print("+",end="")
+                await uasyncio.sleep_ms(1)
                 wait_cnt = wait_cnt + 1
-                if wait_cnt > 10:
+                if wait_cnt > 50:
                     print("i2c_responder.rcv_msg() tired of waiting, exiting before EOD")
                     return bytearray(data).decode("utf8")
                     
             else:
-                print("v2 rcvd '", end="")
-                print(bytearray(b).decode("utf8", errors='replace'),end="")
-                print("' blk remain: ",end="")
+                if rem_bytes > 0 and len(b) != 16:
+                    print("**** <16 bytes in block: ", end="")
+                    print(len(b))
+                          
+                # print("v2 rcvd '", end="")
+                # print(bytearray(b),end="")
+                # print("' blk remain: ",end="")
                 print(rem_bytes)
                 wait_cnt = 0
 
