@@ -258,8 +258,8 @@ class I2CResponder:
         rem_bytes = int.from_bytes(bytes(data),sys.byteorder)
         data = []
         
-        print("receiving bytes: ",end="")
-        print(rem_bytes)
+        # print("receiving bytes: ",end="")
+        # print(rem_bytes)
         
         # receive message
         wait_cnt = 0
@@ -269,11 +269,11 @@ class I2CResponder:
             rem_bytes = rem_bytes - len(b)
             
             if len(b) == 0:
-                print("+",end="")
+                # print("+",end="")
                 await uasyncio.sleep_ms(1)
                 wait_cnt = wait_cnt + 1
                 if wait_cnt > 50:
-                    print("i2c_responder.rcv_msg() tired of waiting, exiting before EOD")
+                    # print("i2c_responder.rcv_msg() tired of waiting, exiting before EOD")
                     return bytearray(data).decode("utf8")
                     
             else:
@@ -284,10 +284,10 @@ class I2CResponder:
                 # print("v2 rcvd '", end="")
                 # print(bytearray(b),end="")
                 # print("' blk remain: ",end="")
-                print(rem_bytes)
+                # print(rem_bytes)
                 wait_cnt = 0
 
-        print("decoding bytes")
+        # print("decoding bytes")
         return bytearray(data).decode("utf8")
 
        

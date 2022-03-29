@@ -32,11 +32,20 @@ def get_i2c(parms):
     
     return I2C(bus, sda=Pin(sda), scl=Pin(scl), freq=freq)
         
+def get_i2c_bus_1(parms):
+    bus  = get_parm(parms,"i2c_bus_1",1)
+    sda  = get_parm(parms,"i2c_sda_pin_1",0)
+    scl  = get_parm(parms,"i2c_scl_pin_1",1)
+    freq = get_parm(parms,"i2c_freq_1",100_000)
+    
+    return I2C(bus, sda=Pin(sda), scl=Pin(scl), freq=freq)
+        
 async def main(parms):
     
     print("ctrl: creating I2C object")
     defaults = parms["defaults"]
     defaults["i2c"] = get_i2c(defaults)
+    defaults["i2c_bus_1"] = get_i2c_bus_1(defaults)
         
     # Create svc_lookup, a dictionary of Services
     # where the servcie can be looked up by name

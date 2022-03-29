@@ -242,6 +242,10 @@ class Service:
     def get_i2c(self):
         return self.get_parm("i2c",None)
           
+    ## Get an instance of the I2C object using standard parms
+    def get_i2c_bus_1(self):
+        return self.get_parm("i2c_bus_1",None)
+          
             
     ## return a value for a parameter in the original .json file
     ##    or the default parm value if parm was not in the .json file

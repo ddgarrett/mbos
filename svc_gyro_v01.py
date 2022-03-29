@@ -31,7 +31,7 @@ class ModuleService(Service):
         
         if self.imu == None:       
             dev_addr = self.get_parm("device_addr",0)
-            self.imu = MPU6050(self.get_i2c(),device_addr=dev_addr)
+            self.imu = MPU6050(self.get_i2c_bus_1(),device_addr=dev_addr)
         
         if self.display_task == None:
             self.display_task = uasyncio.create_task(self.display_data())

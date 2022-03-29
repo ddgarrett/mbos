@@ -36,7 +36,7 @@ class ModuleService(Service):
         # sda = self.get_parm("i2c_sda_pin",0)
         # self.controller = I2cController(scl_pin=scl, sda_pin=sda )
         
-        i2c = self.get_i2c()
+        i2c = self.get_i2c_bus_1()
         self.controller = I2cController(i2c=i2c )
         
         # self.controller = self.get_i2c()

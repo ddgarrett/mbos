@@ -7,9 +7,17 @@ import uasyncio
 
 from xmit_message import XmitMsg
 
+"""
 I2C_CHANNEL = 0
 I2C_SCL_PIN = 21
 I2C_SDA_PIN = 20
+"""
+
+# move I2C comm to bus 1, pins 14 and 15
+I2C_CHANNEL = 1
+RESPONDER_ADDRESS = 0x41
+I2C_SCL_PIN = 15
+I2C_SDA_PIN = 14
 
             
 MSG_SIZE = 15
