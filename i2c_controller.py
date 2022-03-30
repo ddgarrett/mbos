@@ -5,6 +5,8 @@ import sys
 import uasyncio
 import gc
 
+import calc_icmpv6_chksum
+
 class I2cController:
     
     """
@@ -61,12 +63,54 @@ class I2cController:
         gc.collect()
         
         buff = bytearray(msg.encode('utf8'))
+        cs = calc_icmpv6_chksum.calc_icmpv6_chksum(buff)
+        
+        ack = 0
+        
+        # keep resending until receiver
+        # receives ok or says not okay but
+        # don't retransmit
+        while ack == 0:  
+        
+            await self.send_bytes(addr, buff, cs)
+        
+            # receive 2 byte acknowledgement from Responder
+            # 1 = ok, 0 = error, resend, 2 = error, no resend
+            data = self.i2c.readfrom(addr, 2)
+            ack = int.from_bytes(data,sys.byteorder)
+        
+            print("ack: ", end="")
+            print(ack)
+
+        
+        
+    """
+        Send a message in 16 byte or less blocks.
+        
+        First sends a single 4 byte block with a 2 byte length of message,
+        and a 2 byte checksum then the remaining message
+        in blocks of up to 16 bytes.
+        
+        addr = address of the I2C device to send the message to
+        buff  = the byte array to send
+    """
+    async def send_bytes(self, addr, buff, checksum):
+
         rem_bytes = len(buff)
         # writeblk = self.i2c.writeto  # slight performance boost
 
         # send message length to receiver
-        buffer = bytearray(rem_bytes.to_bytes(4,sys.byteorder))
+        buffer = bytearray(rem_bytes.to_bytes(2,sys.byteorder))
+        # self.i2c.writeto(addr, buffer)
+        
+        # send checksum
+        buffer += bytearray(checksum.to_bytes(2,sys.byteorder))
         self.i2c.writeto(addr, buffer)
+        
+        print("snd bytes: ",end="")
+        print(rem_bytes, end="")
+        print(", checksum: ",end="")
+        print(checksum)
         
         msg_pos = 0
         while rem_bytes > 0:
