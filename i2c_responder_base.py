@@ -1,7 +1,7 @@
 from machine import mem32
 import time
 
-class I2CResponder:
+class I2CResponderBase:
     """Implementation of a (polled) Raspberry Pico I2C Responder.
 
     NOTE: This module uses I2C Controller/Responder nomenclature per
@@ -15,8 +15,13 @@ class I2CResponder:
 
     Returns:
         [type]: [description]
+        
+    Modified: March 30, 2022   By: D. Garrett   Version: 2.01
+    Rename I2CResponder -> I2CRepsonderBase in order to allow creation of an I2CResponder
+    which can send messages longer than 16 bytes. 
+    
     """
-    VERSION = "1.0.1"
+    VERSION = "2.0.1"
 
     # Register base addresses
     I2C0_BASE = 0x40044000
@@ -60,7 +65,7 @@ class I2CResponder:
     IC_CON__IC_RESPONDER_DISABLE = 0x40
     GPIOxCTRL__FUNCSEL = 0x1F
     GPIOxCTRL__FUNCSEL__I2C = 3
-
+    
     def write_reg(self, register_offset, data, method=0):
         """Write Pico register."""
         mem32[self.i2c_base | method | register_offset] = data
@@ -80,8 +85,9 @@ class I2CResponder:
             i2c_device_id (int, optional): The internal Pico I2C device to use (0 or 1).
             sda_gpio (int, optional): The gpio number of the pin to use for SDA.
             scl_gpio (int, optional): The gpio number of the pin to use for SCL.
-            responder_address (int, optional): The I2C address to assign to this Responder.
+            responder_address (int, required): The I2C address to assign to this Responder.
         """
+        
         self.scl_gpio = scl_gpio
         self.sda_gpio = sda_gpio
         self.responder_address = responder_address
@@ -182,4 +188,3 @@ class I2CResponder:
         while len(data) < max_size and self.write_data_is_available():
             data.append(mem32[self.i2c_base | self.IC_DATA_CMD] & 0xFF)         
         return data
-
