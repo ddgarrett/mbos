@@ -72,7 +72,7 @@ class ModuleService(Service):
                 ax=int(round(self.imu.accel.x*90/4))
                 ay=int(round(self.imu.accel.y*90/4))
                 temp=int(round((self.imu.temperature* 1.8 + 32)))
-                
+                                
                 # try rounding to the nearest 4 degrees
                 ax = ax*4 + self.adj_x
                 ay = ay*4
@@ -82,13 +82,13 @@ class ModuleService(Service):
                 temps = "{:d}".format(temp)
                 
                 msg = "{: >4} {: >4} {: >4}  ".format(axs,ays,temps)
-                
+               
                 if msg != prev_msg:
                     prev_msg = msg
                     
                     xmit = xmit_lcd.XmitLcd(fr=self.name)
                     xmit.set_cursor(2,1).set_msg(msg)
-            
+                    
                     await self.put_to_output_q(xmit)
             
             await uasyncio.sleep_ms(0)
