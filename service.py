@@ -59,6 +59,8 @@ class Service:
         self.has_focus = False
         self.blink_rate = 0
         
+        self.log_svc = self.get_parm("log_svc","log")
+        
         # print(self.name + ": super().__init__(...)")
         
     def get_input_queue(self):
@@ -91,7 +93,7 @@ class Service:
         
     # send message to the log service
     async def log_msg(self, msg):
-        await self.send_msg("log", msg)
+        await self.send_msg(self.log_svc, msg)
         
     # make self the current focus service, pushing current focus service onto the stack
     async def push_focus(self):
@@ -258,8 +260,3 @@ class Service:
             return defaults[parm_name]
         
         return parm_default
-        
-                
-        
-
-    
