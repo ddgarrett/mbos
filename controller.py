@@ -16,6 +16,9 @@
 import uasyncio
 from xmit_message import XmitMsg
 from machine import Pin, I2C
+
+from i2c_responder import I2CResponder
+
 import gc
 
 def get_parm(parms, parm_name, parm_default):
@@ -30,15 +33,30 @@ def get_i2c(parms):
     scl  = get_parm(parms,"i2c_scl_pin",1)
     freq = get_parm(parms,"i2c_freq",100_000)
     
+    resp_addr = get_parm(parms,"ic2_responder_addr",None)
+    
+    if resp_addr != None:
+        # we're an I2C Responder
+        return I2CResponder(bus, sda_gpio=sda, scl_gpio=scl,
+                            responder_address=resp_addr)
+        
+    # we're an I2C Controller
     return I2C(bus, sda=Pin(sda), scl=Pin(scl), freq=freq)
+    
         
 def get_i2c_bus_1(parms):
-    bus  = get_parm(parms,"i2c_bus_1",1)
+    bus  = get_parm(parms,"i2c_bus_1",None)
+    
+    if bus == None:
+        # No I2C Bus 1 Defined
+        return None
+    
     sda  = get_parm(parms,"i2c_sda_pin_1",0)
     scl  = get_parm(parms,"i2c_scl_pin_1",1)
     freq = get_parm(parms,"i2c_freq_1",100_000)
     
     return I2C(bus, sda=Pin(sda), scl=Pin(scl), freq=freq)
+    
         
 async def main(parms):
     
@@ -62,7 +80,11 @@ async def main(parms):
     for key, svc in svc_lookup.items():
         uasyncio.create_task(svc.run())
     
-    q_log = svc_lookup['log'].get_input_queue()
+    log_svc = "log"
+    if "log_svc" in parms:
+        log_svc = parms["log_svc"]
+        
+    q_log = svc_lookup[log_svc].get_input_queue()
     await q_log.put(XmitMsg("ctrl","log","checking queues"))
     
     # json parm: should we log to and from for all messages?
@@ -89,3 +111,4 @@ async def main(parms):
         # allow co-routines to execute
         await uasyncio.sleep_ms(0)
         
+
