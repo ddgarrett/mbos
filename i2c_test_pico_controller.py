@@ -39,19 +39,20 @@ async def main():
 
     # for send long data
     controller = I2cController(i2c_channel=I2C_CHANNEL,
-                              scl_pin=I2C_SCL_PIN,sda_pin=I2C_SDA_PIN )
+                              scl_pin=I2C_SCL_PIN,sda_pin=I2C_SDA_PIN, i2c_freq=100_000)
 
     # i2c = controller.i2c
     
     # scan I2C bus
-    responder_addresses = controller.scan()
-    print('I2C scan found: ' + format_hex(responder_addresses))
+    # responder_addresses = controller.scan()
+    # print('I2C scan found: ' + format_hex(responder_addresses))
      
     # addr = 0x09 # i2c.scan()[0]  # uno r3 address
     addr = 0x41
 
 
     """
+
     # send data
     await controller.send_msg(addr,"just a test")
     print(await controller.rcv_msg(addr))
@@ -82,6 +83,8 @@ async def main():
     msg = await controller.rcv_msg(addr)
     print("msg: " + msg)
     
+    # return
+
     """
     if len(msg) > 0:
         print("creating new xmit")
@@ -95,8 +98,10 @@ async def main():
         print("zero length msg received")
     """
     
-
-    return
+    t_wait = 50
+    await uasyncio.sleep_ms(t_wait)
+    
+    # return
     # time round trip
     ticks_start = utime.ticks_us()
     
@@ -105,33 +110,39 @@ async def main():
     xmit_msg = """["temp_humid", "lcd", "<class 'XmitLcd'>", ["clear", {"msg": "⏶ Temp:\n⏷ Humidity:"}]]"""
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)
+    await uasyncio.sleep_ms(t_wait)
     
     print("sending msg 2")
     
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)
+    await uasyncio.sleep_ms(t_wait)
     
     print("sending msg 3")
     
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)
+    await uasyncio.sleep_ms(t_wait)
     
     print("sending msg 4")
     
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)
+    await uasyncio.sleep_ms(t_wait)
     
     print("sending msg 5")
     
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)
+    await uasyncio.sleep_ms(t_wait)
     
     print("sending msg 6")
     
     await controller.send_msg(addr,xmit_msg)
     await controller.rcv_msg(addr)
+    # await uasyncio.sleep_ms(t_wait)
     
-    ticks = (utime.ticks_us() - ticks_start)/6
+    ticks = (utime.ticks_us() - ticks_start - (5*t_wait))/6
     print(ticks)
 
 
