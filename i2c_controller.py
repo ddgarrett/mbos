@@ -79,8 +79,8 @@ class I2cController:
             data = self.i2c.readfrom(addr, 2)
             ack = int.from_bytes(data,sys.byteorder)
         
-            print("ack: ", end="")
-            print(ack)
+            # print("ack: ", end="")
+            # print(ack)
 
         
         
@@ -107,10 +107,12 @@ class I2cController:
         buffer += bytearray(checksum.to_bytes(2,sys.byteorder))
         self.i2c.writeto(addr, buffer)
         
+        """
         print("snd bytes: ",end="")
         print(rem_bytes, end="")
         print(", checksum: ",end="")
         print(checksum)
+        """
         
         msg_pos = 0
         while rem_bytes > 0:

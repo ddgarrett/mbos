@@ -103,7 +103,7 @@ class I2CResponder(I2CResponderBase):
         if not self.write_data_is_available():
             return ""
         
-        retry = 5
+        retry = 8
         ok = False
         
         while not ok and retry > 0:
@@ -116,10 +116,12 @@ class I2CResponder(I2CResponderBase):
                 await self.send_ack(int(ok))
                 
                 if not ok:
+                    """
                     print("receive error... ",end="")
                     print((5-retry))
                     print("received: ", end="")
                     print(b_array)
+                    """
                     await uasyncio.sleep_ms(5)
             else:
                 # permanent error - don't resend
@@ -205,10 +207,11 @@ class I2CResponder(I2CResponderBase):
                 data += b
                 rem_bytes = rem_bytes - r_cnt
 
-                if rem_bytes > 0 and r_cnt != 16:
+                # if rem_bytes > 0 and r_cnt != 16:
                     # received a short block
-                    print("**** <16 bytes in block: ", end="")
-                    print(len(b))
+                    # print("**** <16 bytes in block: ", end="")
+                    # print(len(b))
+                
                     
                 """
                 print("v2 rcvd '", end="")
@@ -218,4 +221,5 @@ class I2CResponder(I2CResponderBase):
                 """
                 
         return data
+
 
