@@ -113,9 +113,17 @@ class I2CResponder(I2CResponderBase):
             
             if retry > 0:
                 # Controller will resend if not okay
-                await self.send_ack(int(ok)) 
+                await self.send_ack(int(ok))
+                
+                if not ok:
+                    print("receive error... ",end="")
+                    print((5-retry))
+                    print("received: ", end="")
+                    print(b_array)
+                    await uasyncio.sleep_ms(5)
             else:
                 # permanent error - don't resend
+                print("***** permanent receive error *****")
                 await self.send_ack(2) 
 
         if ok:
@@ -153,7 +161,7 @@ class I2CResponder(I2CResponderBase):
         
         """
         print("rcv bytes: ",end="")
-        print(rem_bytes, end="")
+        print(n_bytes, end="")
         print(", checksum: ",end="")
         print(chksum)
         """
