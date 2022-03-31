@@ -1,10 +1,10 @@
 
 {
+"name":"Controller v01.00",
+
 "main":"controller",
 "log_xmit": true,
 "controller":"controller", "controller todo":"change name to controller_svc?",
-
-
 
 "defaults": { 
     "q_in_size":5,
