@@ -14,7 +14,7 @@ import uasyncio
 # Local
 from i2c_responder import I2CResponder
 
-I2C_FREQUENCY = 400_000
+I2C_FREQUENCY = 100_000
 
 
 RESPONDER_I2C_DEVICE_ID = 0
@@ -79,8 +79,6 @@ async def main():
             print("rcv msg (",end="")
             print(len(last_msg),end="")
             print("): " + last_msg )
-            
-
             
         await uasyncio.sleep_ms(0)
         
