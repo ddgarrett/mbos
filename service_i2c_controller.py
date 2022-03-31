@@ -55,16 +55,16 @@ class ModuleService(Service):
         q_in  = self.input_queue
         q_out = self.output_queue
                 
-        # get active i2c addresses
-        resp_addr = self.controller.scan()
+        ignore_addr = self.get_parm("ignore_addr",[])
         
-        # only poll addr in the active i2c list
-        poll_addr = []
-        for a in self.resp_addr:
-            if a in resp_addr:
-                poll_addr.append(a)
-            else:
-                await self.log_msg("skipping inactive i2c address: "+str(a))
+        # get active i2c addresses
+        poll_addr = self.controller.scan()
+        for a in ignore_addr:
+            a = int(a)
+            if a in poll_addr:
+                poll_addr.remove(a)
+        
+        await self.log_msg("polling addresses: " + str(poll_addr))
         
         while True:
             
@@ -85,14 +85,13 @@ class ModuleService(Service):
                 
                 await uasyncio.sleep_ms(0)
                 
-                
             # poll i2c bus for any input
             for addr in poll_addr:
                 msg = await self.controller.rcv_msg(addr)
                 
                 if len(msg) > 0:
                     # unwrap the message and place on output queue                    
-                    await q_out.put(xmit)
+                    await q_out.put(msg)
                     
                 await uasyncio.sleep_ms(0)
                     

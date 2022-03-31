@@ -23,7 +23,7 @@
     "i2c_bus_1"    :1,
     "i2c_sda_pin_1":14, 
     "i2c_scl_pin_1":15,
-    "ic2_freq_1"   :400000
+    "ic2_freq_1"   :100000
     
     },
 
@@ -36,7 +36,7 @@
         },
 
     {"name":"i2c_svc",    "module":"service_i2c_controller", "q_in_size":10, "q_out_size":10,
-     "resp_addr":["0x41"] },
+     "ignore_addr":[104] },
      
     {"name":"remote_log", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" },
         
