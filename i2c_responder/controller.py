@@ -15,15 +15,61 @@
 
 import uasyncio
 from xmit_message import XmitMsg
+from machine import Pin, I2C
+
+from i2c_responder import I2CResponder
+
 import gc
 
+def get_parm(parms, parm_name, parm_default):
+    if parm_name in parms:
+        return parms[parm_name]
+    
+    return parm_default
+
+def get_i2c(parms):
+    bus  = get_parm(parms,"i2c_bus",0)
+    sda  = get_parm(parms,"i2c_sda_pin",0)
+    scl  = get_parm(parms,"i2c_scl_pin",1)
+    freq = get_parm(parms,"i2c_freq",100_000)
+    
+    resp_addr = get_parm(parms,"ic2_responder_addr",None)
+    
+    if resp_addr != None:
+        # we're an I2C Responder
+        return I2CResponder(bus, sda_gpio=sda, scl_gpio=scl,
+                            responder_address=resp_addr)
+        
+    # we're an I2C Controller
+    return I2C(bus, sda=Pin(sda), scl=Pin(scl), freq=freq)
+    
+        
+def get_i2c_bus_1(parms):
+    bus  = get_parm(parms,"i2c_bus_1",None)
+    
+    if bus == None:
+        # No I2C Bus 1 Defined
+        return None
+    
+    sda  = get_parm(parms,"i2c_sda_pin_1",0)
+    scl  = get_parm(parms,"i2c_scl_pin_1",1)
+    freq = get_parm(parms,"i2c_freq_1",100_000)
+    
+    return I2C(bus, sda=Pin(sda), scl=Pin(scl), freq=freq)
+    
+        
 async def main(parms):
     
+    print("ctrl: creating I2C object")
+    defaults = parms["defaults"]
+    defaults["i2c"] = get_i2c(defaults)
+    defaults["i2c_bus_1"] = get_i2c_bus_1(defaults)
+        
     # Create svc_lookup, a dictionary of Services
     # where the servcie can be looked up by name
     print("ctrl: creating lookup list of Services")
     svc_lookup = {}
-    defaults = parms["defaults"]
+
     for svc_parms in parms["services"]:
         print("... "+svc_parms['name']) # show name of service being started
         svc_parms["defaults"] = defaults  # every service has access to defaults
@@ -34,7 +80,11 @@ async def main(parms):
     for key, svc in svc_lookup.items():
         uasyncio.create_task(svc.run())
     
-    q_log = svc_lookup['log'].get_input_queue()
+    log_svc = "log"
+    if "log_svc" in parms:
+        log_svc = parms["log_svc"]
+        
+    q_log = svc_lookup[log_svc].get_input_queue()
     await q_log.put(XmitMsg("ctrl","log","checking queues"))
     
     # json parm: should we log to and from for all messages?
@@ -51,16 +101,6 @@ async def main(parms):
         # msg_passed true if a message is passed from one service to another
         msg_passed = await controller_svc.poll_output_queues(svc_lookup, log_xmit)      
         
-        # TODO: find out why gc.collect() causes DHT11 sensor to have errors.
-        # Doing garbage collection too frequently seemed to cause problems for the DHT11 Service?
-        # Doing it only if a message was actually passed reduced frequency of problem?
-        # But, as we pass more messages, problem may reoccur?
-        # In any case, if we're not passing messages we're not doing any work.
-        # And if we're not doing any work, we shouldn't need to run the garbage collection?
-        # **MAY** have been caused or made worse by connecting dth11 to 3.3v power instead of 5v?
-        # Have switched to 5v power and haven't seen any errors?
-        # Did have errors with 5v. Switched back to 3.3v and changed driver.
-        # Driver minimum checking period was set to .2 sec instead of 1 sec.
         if msg_passed:
             pass_cnt -= 1
             if pass_cnt <= 0:
