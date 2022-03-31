@@ -1,44 +1,42 @@
 
 {
+"name":"Responder v01.00",
+
 "main":"controller",
 "log_xmit": true,
 "controller":"controller",
+"log_svc"   :"remote_log",
+
+"comment" : "This is the responder version of the json parm file",
 
 "defaults": { 
+    "log_svc"   :"remote_log",
+    
     "q_in_size":5,
     "q_out_size":5,
-    "ir_remote": "ir_remote",
-    "lcd_col_cnt":20,
-    "lcd_row_cnt":4
+    
+    "ir_remote": "ir_remote",    "ir_remote note": "change to input_device?",
+    
+    "lcd_col_cnt":20,  "lcd_todo": "get this info from remote Controller",
+    "lcd_row_cnt":4,
+    
+    "i2c_bus"    :0,
+    "i2c_sda_pin":20, 
+    "i2c_scl_pin":21,
+    "ic2_freq"   :100000,
+    
+    "ic2_responder_addr"   : 65
+    
     },
 
 "services": [
-    {"name":"controller", "module":"service_controller",   "q_out_size":10,
-        "startup_focus":"menu",  "menu":"menu" },
+    {"name":"controller",     "module":"service_responder",  "q_out_size":10, "i2c_svc":"i2c_svc" },
          
-    {"name":"menu",       "module":"service_menu",     "initial_app":"temp_humid",  
-        "menu":[ "temp_humid", "mem_use", "timer", "clock"]
-        },
+    {"name":"i2c_svc",        "module":"svc_i2c_responder",  "q_in_size":1000,  "print_log":1 },
         
-    {"name":"lcd",        "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
+    {"name":"remote_log",     "module":"service_print",      "q_in_size":1000,  "print_log":1 },
         
-    {"name":"temp_humid", "module":"service_dht11_v02" },
-        
-    {"name":"log",        "module":"service_print",  "q_in_size":1000,  "print_log":1,
-      "todo": "make a log to disk version, or have that as an option?" },
-        
-    {"name":"ir_remote",  "module":"service_ir",     "key_map":"ir_mapping_koobook.json" },
-    {"name":"mem_use",    "module":"service_mem_use"   },
-    {"name":"timer",      "module":"service_timer"   }, 
-    {"name":"clock",      "module":"service_clock"   }
-        
-    ],
-    
-"currently_unused_services": [
-          
-    {"name":"distance",   "module":"service_sonic",  "todo": "remove this? or update it?" },
-    {"name":"lcd_off",    "module":"service_lcd_off"   },
-    {"name":"test",       "module":"service_test_lcd"   }
-        
+    {"name":"remote_mem_use", "module":"service_mem_use"   }
+         
     ]
 }
