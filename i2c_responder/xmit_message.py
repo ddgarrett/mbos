@@ -36,10 +36,44 @@ class XmitMsg:
     
     def get_msg(self):
         return self.msg
+    
     # dumps will generate a string version of this object
     def dumps(self):
-        message = [self.fr, self.to, type(self), self.msg]
+        message = [self.fr, self.to, str(type(self)), self.msg]
+        # message = [self.fr, self.to, self.msg]
         return ujson.dumps(message)
     
+    # wrap a message in a new to/from xmit
+    def wrapXmit(self, fr=None,to=None):
+        if fr == None:
+            fr = self.fr
+            
+        if to == None:
+            to = self.to
+            
+        new_msg = self.dumps()
+        return XmitMsg(fr=fr,to=to,msg=new_msg)
     
+    # unwrap a previous wrapped message
+    def unwrapMsg(self):
+        xmit_data = ujson.loads(self.msg)
+        self.fr = xmit_data[0]
+        self.to = xmit_data[1]
+        # for now, ignore xmit type
+        # they should just be to help build an xmit
+        
+        """
+        if xmit_data[2] == "<class 'XmitLcd'>":
+            self.msg = ujson.loads(xmit_data[3])
+        else:
+            self.msg = xmit_data[3]
+        """
+        
+        self.msg = xmit_data[3]
+        
+        return self
+            
+        # print("type xmit_data[2]" + str(type(xmit_data[2])))
+            
+        return self
     
