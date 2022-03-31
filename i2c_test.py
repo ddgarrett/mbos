@@ -9,7 +9,7 @@ import utime
 
 """
 
-I2C_FREQUENCY = 400_000
+I2C_FREQUENCY = 100_000
 
 i2c_parm = [
     [0, 100_000, 20, 21],
