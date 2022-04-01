@@ -79,7 +79,7 @@ class ModuleService(Service):
                 
                 if i2c_addr in poll_addr:
                     await self.controller.send_msg(i2c_addr,msg)
-                    await self.log_msg("ctl sent: " + msg + " to " + str(i2c_addr))
+                    # await self.log_msg("ctl sent: " + msg + " to " + str(i2c_addr))
                 else:
                     await self.log_msg("skipped msg: " + msg)
                 
@@ -90,8 +90,10 @@ class ModuleService(Service):
                 msg = await self.controller.rcv_msg(addr)
                 
                 if len(msg) > 0:
-                    # unwrap the message and place on output queue                    
-                    await q_out.put(msg)
+                    # unwrap the message and place on output queue
+                    xmit = XmitMsg(msg=msg)
+                    xmit.unwrapMsg()
+                    await q_out.put(xmit)                    
                     
                 await uasyncio.sleep_ms(0)
                     
