@@ -31,14 +31,16 @@
     {"name":"controller", "module":"service_controller",   "q_out_size":10,
         "startup_focus":"menu",  "menu":"menu" },
          
-    {"name":"menu",       "module":"service_menu",     "initial_app":"temp_humid",  
-        "menu":[ "temp_humid", "mem_use", "timer", "clock", "test_i2c", "gyro"]
+    {"name":"menu",       "module":"service_menu",     "initial_app":"test_i2c",  
+        "menu":[ "temp_humid", "mem_use", "timer", "clock", "test_i2c", "gyro", "0x41_mem_use" ]
         },
 
     {"name":"i2c_svc",    "module":"service_i2c_controller", "q_in_size":10, "q_out_size":10,
      "ignore_addr":[104] },
      
     {"name":"remote_log", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" },
+        
+    {"name":"0x41_mem_use", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" },
         
     {"name":"test_i2c",   "module":"svc_test_i2c"},
         

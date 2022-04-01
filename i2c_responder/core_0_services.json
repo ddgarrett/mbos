@@ -36,7 +36,7 @@
         
     {"name":"remote_log",     "module":"service_print",      "q_in_size":1000,  "print_log":1 },
         
-    {"name":"remote_mem_use", "module":"service_mem_use"   }
+    {"name":"0x41_mem_use", "module":"service_mem_use"   }
          
     ]
 }
