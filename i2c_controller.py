@@ -138,10 +138,10 @@ class I2cController:
     # read a message sent by a responders
     # and return to caller
     async def rcv_msg(self, addr):
-        readblk = self.i2c.readfrom # slight performance boost
+        # readblk = self.i2c.readfrom # slight performance boost
         
         # read first block containing length of message
-        data = readblk(addr, 4)
+        data = self.i2c.readfrom(addr, 4)
         msg_len = int.from_bytes(data,sys.byteorder)
 
         # print("read msg len=",end="")
@@ -154,7 +154,7 @@ class I2cController:
             if msg_len < blk_len:
                 blk_len = msg_len
                 
-            blk = readblk(addr, blk_len)
+            blk = self.i2c.readfrom(addr, blk_len)
             data = data +  blk
             msg_len = msg_len - len(blk)
             
