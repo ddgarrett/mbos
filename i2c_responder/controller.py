@@ -106,7 +106,7 @@ async def main(parms):
             if pass_cnt <= 0:
                 pass_cnt = 5
                 # await q_log.put(XmitMsg("controller","log","doing gc.collect()"))
-                gc.collect()
+                # gc.collect()
             
         # allow co-routines to execute
         await uasyncio.sleep_ms(0)

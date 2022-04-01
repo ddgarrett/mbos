@@ -14,6 +14,7 @@ from service import Service
 import queue
 import uasyncio
 from xmit_message import XmitMsg
+import gc
 
 # not needed?
 # from i2c_responder import I2CResponder
@@ -31,26 +32,30 @@ class ModuleService(Service):
                 
         while True:
             
+            io = False
+            
             # is controller waiting for us to send data?
             while i2c_responder.read_is_pending():
                 if not q_in.empty():
-                    
                     xmit = await q_in.get()
                     print("i2c_svc input q: " + xmit.dumps())
-                    # await i2c_responder.send_msg(xmit)
-                    await i2c_responder.send_msg("")
+                    await i2c_responder.send_msg(xmit.dumps())
+                    # await i2c_responder.send_msg("")
+                    io = True
                 else:
                     await i2c_responder.send_msg("")
 
                 
             # is controller trying to send us some data?
             while i2c_responder.write_data_is_available():
+
                 msg = await i2c_responder.rcv_msg()
                 
                 if len(msg) > 0:
                     xmit = XmitMsg(msg=msg)
                     xmit.unwrapMsg()
                     await q_out.put(xmit)
+                    io = True
     
                 """
                 print("rcv msg (",end="")
@@ -58,7 +63,7 @@ class ModuleService(Service):
                 print("): " + msg )
                 """
                 
-            
+            # gc.collect()
             await uasyncio.sleep_ms(0)
                             
 
