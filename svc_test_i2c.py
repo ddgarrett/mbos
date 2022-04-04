@@ -29,18 +29,29 @@ class ModuleService(Service):
         await self.put_to_output_q(xmit)
 
         
+        xmit = xmit_lcd.XmitLcd(fr=self.name)
+        xmit.set_cursor(10,2).set_msg(str(self.send_cnt))
+        await self.put_to_output_q(xmit)
         
         while True:
 
+
+            # print("************************** svc_test_i2c: awaiting IR input")
+            await self.await_ir_input()
+            
+            self.send_cnt += 1
+                        
             xmit = xmit_lcd.XmitLcd(fr=self.name)
             xmit.set_cursor(10,2).set_msg(str(self.send_cnt))
             await self.put_to_output_q(xmit)
-            
-            await self.await_ir_input()
 
-            await self.send_msg("remote_log","test forwarded message!")
-            
-            self.send_cnt += 1
+            # send a quick burst of 10 messages
+            # print("************************** svc_test_i2c: ")
+            for i in range(1):
+                await self.send_msg("remote_log","test forwarded message!")
+                # await uasyncio.sleep_ms(500)
+
+            await uasyncio.sleep_ms(0)
 
 
 
