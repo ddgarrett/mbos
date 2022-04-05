@@ -55,11 +55,18 @@ async def main():
     print("awaiting I2C data:")
     
     # Check i2c responder output q
+    print("rcv: ",end="")
+    rcnt = 0
     while True:
         
         if not q_out.empty():
             msg = await q_out.get()
-            print("rcv: " + msg)
+            rcnt = rcnt + 1
+            print(rcnt,end=" ")
+            
+            # print("i2c state (write/read): ",end="")
+            # print(i2c_responder.write_data_is_available(),end=" ")
+            # print(i2c_responder.read_is_pending())
             
         await uasyncio.sleep_ms(0)
         

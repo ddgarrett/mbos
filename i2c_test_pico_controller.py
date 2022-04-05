@@ -76,14 +76,33 @@ async def main():
     
     print("sending msg")
     
-    await controller.send_msg(addr,xmit_msg)
+    result = (await controller.send_msg(addr,xmit_msg))
+    print("result: ",end="")
+    print(result)
     
+    """
     print("receiving msg")
     
     msg = await controller.rcv_msg(addr)
     print("msg: " + msg)
+    """
     
     # return
+    
+    xmit_msg = """["temp_humid", "lcd", "<class 'XmitLcd'>", ["clear", {"msg": "⏶ Temp:\n⏷ Humidity:"}]]"""
+    
+    print("sending msg ",end="")
+    
+    for i in range(100):
+        print(i,end=" ")
+        
+        await controller.send_msg(addr,xmit_msg)
+        
+    print("resend/failed cnt: ",end="")
+    print(controller.resend_cnt,end="/")
+    print(controller.failed_cnt )
+    
+    return
 
     """
     if len(msg) > 0:
@@ -98,7 +117,7 @@ async def main():
         print("zero length msg received")
     """
     
-    t_wait = 50
+    t_wait = 0
     await uasyncio.sleep_ms(t_wait)
     
     # return
@@ -145,6 +164,10 @@ async def main():
     ticks = (utime.ticks_us() - ticks_start - (5*t_wait))/6
     print(ticks)
 
+    print("resend/failed cnt: ",end="")
+    print(controller.resend_cnt,end="/")
+    print(controller.failed_cnt )
+    
 
 
 uasyncio.run(main())

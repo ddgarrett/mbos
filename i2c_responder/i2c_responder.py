@@ -57,6 +57,9 @@ class I2CResponder(I2CResponderBase):
         self.buff_2 = bytearray(2)
         self.q_in = queue.Queue(q_in_size)
         self.q_out = queue.Queue(q_out_size)
+        
+        self.resend_cnt = 0
+        self.failed_cnt = 0
 
 
     # Poll for send or receive requests from the I2C controller
@@ -85,23 +88,23 @@ class I2CResponder(I2CResponderBase):
             
             # check first to see if I2C Controller is polling for input
             if self.read_is_pending():
-                if q_in.empty():
+                if self.q_in.empty():
                     await self.send_msg("")
                 else:
-                    msg = await q_in.get()
+                    msg = (await self.q_in.get())
                     await self.send_msg(msg)
                     
             # check to see if I2C Controller is waiting to send us a message
-            elif self.write_data_is_available():
-                msg = self.rcv_msg()
+            if self.write_data_is_available():
+                msg = (await self.rcv_msg())
                 
                 # Make sure we don't wait for a queue put.
                 # If queue full, just silently discard input so we
                 # don't hang the Controller.
-                if len(msg) > 0 and not q_out.full():
+                if (len(msg) > 0) and (not self.q_out.full()):
                     # TODO: catch error just in case?
                     # Impossible if we are only task putting msg in queue?
-                    await q_out.put_nowait(msg)
+                    await self.q_out.put(msg)
                     
             await uasyncio.sleep_ms(0) 
                     
@@ -114,10 +117,11 @@ class I2CResponder(I2CResponderBase):
         msg_len = await self.rcv_msg_length()
         
         if msg_len == 0:
+            # print("msg_len 0")
             return ""
         
-        if msg_len > len(self.buffer):
-            msg_len = len(self.buffer)
+        if msg_len > len(self.buff):
+            msg_len = len(self.buff)
         
         # now receive the actual message
         bytes_remain = msg_len
@@ -125,29 +129,35 @@ class I2CResponder(I2CResponderBase):
         while bytes_remain > 0:
             
             # Read a block of data 
-            buff_2[0] =_BLK_MSG_CHKSUM_ERR_RESENDING
-            while buff_2[0] == _BLK_MSG_CHKSUM_ERR_RESENDING:
+            self.buff_2[0] =_BLK_MSG_CHKSUM_ERR_RESENDING
+            while self.buff_2[0] == _BLK_MSG_CHKSUM_ERR_RESENDING:
                 # receive n_bytes into buffer at offset offs
-                n_bytes = await self.rcv_bytes(buff,offs,bytes_remain)
+                n_bytes = await self.rcv_bytes(self.buff,offs,bytes_remain)
                 
                 # if 0 bytes received, something's wrong
                 # return an empty string
                 if n_bytes == 0:
+                    print("unexpected 0 byte receipt")
                     return ""
                 
                 # send back checksum
-                cs = calc_icmpv6_chksum.calc_icmpv6_chksum(buff[offs:offs+n_bytes])
-                buff_2[0:2] = bytearray(cs.to_bytes(2,sys.byteorder))
-                if (await self.snd_bytes(buff_2,0,2)) != 2:
-                    return ""
+                cs = calc_icmpv6_chksum.calc_icmpv6_chksum(self.buff[offs:offs+n_bytes])
+                self.buff_2[0:2] = bytearray(cs.to_bytes(2,sys.byteorder))
+                if (await self.snd_bytes(self.buff_2,0,2)) != 2:
+                    pass
+                    # print("unable to send cs?")
+                    # return ""
             
                 # receive checksum response
-                if await self.rcv_bytes(buff_2,0,1) != 1:
+                if await self.rcv_bytes(self.buff_2,0,1) != 1:
+                    print("invalid checksum response")
                     return ""
             
             
             # checksum error, but no resend - return empty string
-            if buff_2[0] != _BLK_MSG_CHKSUM_OKAY:
+            if self.buff_2[0] != _BLK_MSG_CHKSUM_OKAY:
+                print("unexpected result: ",end="")
+                print(int(self.buff_2[0]))
                 return ""
             
             # checksum okay
@@ -157,32 +167,50 @@ class I2CResponder(I2CResponderBase):
             
             
         # return received string 
-        return buff[0:msg_len].decode('utf8')
+        resp = self.buff[0:msg_len].decode('utf8')
+        # print("resp: ",end="")
+        # print(resp)
+        return resp
             
 
     # receive a 2 byte length
     async def rcv_msg_length(self):
-        buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_RESEND
+        self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_RESEND
         
-        while buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_RESEND:
+        while self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_RESEND:
         
             # didn't receive 2 bytes before Controller requested a send
-            if (await self.rcv_bytes(buff_2,0,2)) != 2:
+            if (await self.rcv_bytes(self.buff_2,0,2)) != 2:
+                print("didn't receive 2 byte length")
                 return 0 
             
-            i = int.from_bytes(bytes(buff_2),sys.byteorder)
+            i = int.from_bytes(bytes(self.buff_2),sys.byteorder)              
+                
             
             # echo length of message
-            if (await self.snd_bytes(buff_2,0,2)) != 2:
-                return 0
+            # self.await_send_rcv_avail()
+            await self.snd_bytes(self.buff_2,0,2)
+            """
+            if (await self.snd_bytes(self.buff_2,0,2)) != 2:
+                print("unable to send 2 byte length")
+                
+                print("self.await_send_rcv_avail(): ",end="")
+                print(await self.await_send_rcv_avail())
+                
+                # return 0
+            """
 
             # receive ack length okay or resend or cancel
-            if await self.rcv_bytes(buff_2,0,1) != 1:
+            self.await_send_rcv_avail()
+            if (await self.rcv_bytes(self.buff_2,0,1)) != 1:
+                print("didn't receive 1 byte length ack")
                 return 0 
-            if buff_2[0] == _BLK_MSG_LENGTH_ACK_OK:
+            if self.buff_2[0] == _BLK_MSG_LENGTH_ACK_OK:
                 return i
             
         # not ack msg length okay or resend
+        # print("canceled rcv length",end="")
+        # print(int(self.buff_2[0]))
         return 0
         
         
@@ -216,7 +244,9 @@ class I2CResponder(I2CResponderBase):
     async def snd_bytes(self,buff,offs,n_bytes):
         for i in range(n_bytes):
             rw = await self.await_send_rcv_avail()
-            if rw != SEND_AVAILABLE:
+            if rw != _SEND_AVAILABLE:
+                # print("snd_bytes unexpected rw: ",end="")
+                # print(rw)
                 return i
             self.put_read_data(buff[offs])
             offs = offs + 1
