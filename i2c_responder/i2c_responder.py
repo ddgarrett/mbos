@@ -9,8 +9,8 @@ import queue
 
 from micropython import const
 
-_SEND_AVAILABLE = const(1)
-_RECEIVE_AVAILABLE  = const(2)
+_SEND_AVAILABLE = "sa"
+_RECEIVE_AVAILABLE  = "ra"
 
 
 _BLK_MSG_LENGTH_ACK_OK         = const(127 + 1)
@@ -20,6 +20,9 @@ _BLK_MSG_LENGTH_ACK_ERR_CANCEL = const(127 + 3)
 _BLK_MSG_CHKSUM_OKAY           = const(127 + 4)
 _BLK_MSG_CHKSUM_ERR_RESENDING  = const(127 + 5)
 _BLK_MSG_CHKSUM_ERR_CANCEL     = const(127 + 6)
+
+_TXN_CONTINUE                  = const(127+16)
+_TXN_CANCEL                    = const(127+17)
 
 
 
@@ -60,6 +63,8 @@ class I2CResponder(I2CResponderBase):
         
         self.resend_cnt = 0
         self.failed_cnt = 0
+        
+        self.trace = False
 
 
     # Poll for send or receive requests from the I2C controller
@@ -135,29 +140,28 @@ class I2CResponder(I2CResponderBase):
                 n_bytes = await self.rcv_bytes(self.buff,offs,bytes_remain)
                 
                 # if 0 bytes received, something's wrong
-                # return an empty string
                 if n_bytes == 0:
-                    print("unexpected 0 byte receipt")
-                    return ""
+                    self.trace("r03")
+
                 
                 # send back checksum
                 cs = calc_icmpv6_chksum.calc_icmpv6_chksum(self.buff[offs:offs+n_bytes])
                 self.buff_2[0:2] = bytearray(cs.to_bytes(2,sys.byteorder))
                 if (await self.snd_bytes(self.buff_2,0,2)) != 2:
-                    pass
-                    # print("unable to send cs?")
-                    # return ""
+                    self.trace("s02")
             
                 # receive checksum response
                 if await self.rcv_bytes(self.buff_2,0,1) != 1:
-                    print("invalid checksum response")
-                    return ""
+                    self.trace("r04")
+                    self.buff_2[0] = _BLK_MSG_CHKSUM_ERR_RESENDING
             
-            
-            # checksum error, but no resend - return empty string
+                # if chksum error, print
+                if self.buff_2[0] == _BLK_MSG_CHKSUM_ERR_RESENDING:
+                    self.trace("rs02")
+                
+            # checksum error after n retries - return empty string
             if self.buff_2[0] != _BLK_MSG_CHKSUM_OKAY:
-                print("unexpected result: ",end="")
-                print(int(self.buff_2[0]))
+                self.trace("cs01")
                 return ""
             
             # checksum okay
@@ -167,10 +171,7 @@ class I2CResponder(I2CResponderBase):
             
             
         # return received string 
-        resp = self.buff[0:msg_len].decode('utf8')
-        # print("resp: ",end="")
-        # print(resp)
-        return resp
+        return self.buff[0:msg_len].decode('utf8')
             
 
     # receive a 2 byte length
@@ -181,36 +182,46 @@ class I2CResponder(I2CResponderBase):
         
             # didn't receive 2 bytes before Controller requested a send
             if (await self.rcv_bytes(self.buff_2,0,2)) != 2:
-                print("didn't receive 2 byte length")
-                return 0 
+                self.trace("r01")
+                self.buff_2[0] = 0x00
+                self.buff_2[1] = 0x00
             
             i = int.from_bytes(bytes(self.buff_2),sys.byteorder)              
                 
             
             # echo length of message
-            # self.await_send_rcv_avail()
-            await self.snd_bytes(self.buff_2,0,2)
-            """
-            if (await self.snd_bytes(self.buff_2,0,2)) != 2:
-                print("unable to send 2 byte length")
-                
-                print("self.await_send_rcv_avail(): ",end="")
-                print(await self.await_send_rcv_avail())
-                
-                # return 0
-            """
+            # first - flush any data Controller has sent us
+            # not sure why it happens, but controller sometimes
+            # seems to think we sent something already
+            ra = await self.await_send_rcv_avail()
+            if ra == _RECEIVE_AVAILABLE:
+                n = await self.rcv_bytes(self.buff,0,1000)
+#                 print("(",end="")
+#                 print(self.buff_2,end=" ")
+#                 print(self.buff[0:n],end=" ")
+#                 print(n,end=") ")
+            
+            n = await self.snd_bytes(self.buff_2,0,2)
+            if n != 2:
+                self.trace("s01")
 
             # receive ack length okay or resend or cancel
-            self.await_send_rcv_avail()
+            # self.await_send_rcv_avail()
             if (await self.rcv_bytes(self.buff_2,0,1)) != 1:
-                print("didn't receive 1 byte length ack")
-                return 0 
+                self.trace("r02")
+                self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_RESEND
+                
+            # echo last ack?
+            # n = await self.snd_bytes(self.buff_2,0,1)
+            
             if self.buff_2[0] == _BLK_MSG_LENGTH_ACK_OK:
                 return i
             
+            self.trace("rs01")
+            
         # not ack msg length okay or resend
-        # print("canceled rcv length",end="")
-        # print(int(self.buff_2[0]))
+        # cancelling send
+        self.trace("cx01")
         return 0
         
         
@@ -242,11 +253,13 @@ class I2CResponder(I2CResponderBase):
     # or a _RECEIVE_AVAILABLE request was received.
     #
     async def snd_bytes(self,buff,offs,n_bytes):
+        # await send available
+        # while (await self.await_send_rcv_avail()) != _SEND_AVAILABLE:
+        #    await uasyncio.sleep_ms(0)
+            
         for i in range(n_bytes):
             rw = await self.await_send_rcv_avail()
             if rw != _SEND_AVAILABLE:
-                # print("snd_bytes unexpected rw: ",end="")
-                # print(rw)
                 return i
             self.put_read_data(buff[offs])
             offs = offs + 1
@@ -487,3 +500,6 @@ class I2CResponder(I2CResponderBase):
             
             self.put_read_data(value)
 
+    def trace(self,s,end=" "):
+        if self.trace:
+            print(s,end=end)
