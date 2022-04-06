@@ -18,6 +18,9 @@ _BLK_MSG_CHKSUM_ERR_RESENDING  = const(127 + 5)
 _BLK_MSG_CHKSUM_ERR_CANCEL     = const(127 + 6)
 
 
+_TXN_CONTINUE                  = const(127+16)
+_TXN_CANCEL                    = const(127+17)
+
 class I2cController:
     
     """
@@ -119,11 +122,12 @@ class I2cController:
         
             # send 2 byte length
             self.buff_2[0:2] = length.to_bytes(2,sys.byteorder)
-            i2c.writeto(addr,self.buff_2)
+            self.i2c.writeto(addr,self.buff_2)
             
             # receive echo of length from responder
             # print("rcvd length echo from responder: ",end="")
-            i2c.readfrom_into(addr,self.buff_2)
+            self.i2c.readfrom_into(addr,self.buff_2)
+            # self.buff_2[0:2] = bytearray(i2c.readfrom(addr,2))[0:2]
             i = int.from_bytes(self.buff_2,sys.byteorder)
             # print(i)
         
@@ -131,9 +135,13 @@ class I2cController:
             if i == length:
                 self.buff_2[0] = _BLK_MSG_LENGTH_ACK_OK
             else:
+#                 print("(",end="")
+#                 print(i,end=" vs ")
+#                 print(length,end=") ")
                 retry_cnt = retry_cnt - 1
                 if retry_cnt > 0:
                     # print("retry length ack")
+                    # print("rt01 ",end="")
                     self.resend_cnt = self.resend_cnt + 1
                     self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_RESEND
                 else:
@@ -141,7 +149,11 @@ class I2cController:
                     self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_CANCEL
             
             # send ack
-            i2c.writeto(addr,self.buff_2[0:1])
+            self.i2c.writeto(addr,self.buff_2[0:1])
+            
+            # TODO: read single byte to confirm continue or cancel?
+            # last_send = self.buff_2[0:1]
+        
 
     # Send a given number of bytes from buff
     # starting at offs.
@@ -178,6 +190,7 @@ class I2cController:
                 retry_cnt = retry_cnt - 1
                 if retry_cnt > 0:
                     self.resend_cnt = self.resend_cnt + 1
+                    print("rt02 ",end="")
                     self.buff_2[0] = _BLK_MSG_CHKSUM_ERR_RESENDING
                 else:
                     self.failed_cnt = self.failed_cnt + 1
@@ -185,6 +198,8 @@ class I2cController:
             
             # send ack
             i2c.writeto(addr,self.buff_2[0:1])
+            
+        # TODO: read single byte to confirm continue or cancel 
 
     """
         Previous version of code below
