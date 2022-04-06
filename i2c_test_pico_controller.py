@@ -16,8 +16,8 @@ I2C_SDA_PIN = 20
 # move I2C comm to bus 1, pins 14 and 15
 I2C_CHANNEL = 1
 RESPONDER_ADDRESS = 0x41
-I2C_SCL_PIN = 15
-I2C_SDA_PIN = 14
+I2C_SCL_PIN = 27
+I2C_SDA_PIN = 26
 
             
 MSG_SIZE = 15
@@ -93,14 +93,21 @@ async def main():
     
     print("sending msg ",end="")
     
+    ticks_start = utime.ticks_us()
+    
     for i in range(100):
-        print(i,end=" ")
+        # print(i,end=" ")
         
         await controller.send_msg(addr,xmit_msg)
         
+    ticks_end = utime.ticks_us()
+    
     print("resend/failed cnt: ",end="")
     print(controller.resend_cnt,end="/")
     print(controller.failed_cnt )
+    
+    ticks = (ticks_end - ticks_start)/100
+    print(ticks)
     
     return
 
