@@ -43,7 +43,7 @@ class I2CResponder(I2CResponderBase):
 
 
     def __init__(self, i2c_device_id=0, sda_gpio=0, scl_gpio=1, responder_address=0x41,
-                 q_in_size=30, q_out_size=30):
+                 q_in_size=30, q_out_size=30, trace=False):
         """Initialize.
 
         Args:
@@ -64,7 +64,10 @@ class I2CResponder(I2CResponderBase):
         self.resend_cnt = 0
         self.failed_cnt = 0
         
-        self.trace = False
+        if trace:
+            self.trace = self.print_trace
+        else:
+            self.trace = self.no_trace
 
 
     # Poll for send or receive requests from the I2C controller
@@ -114,9 +117,10 @@ class I2CResponder(I2CResponderBase):
             await uasyncio.sleep_ms(0) 
                     
                 
-    """
-        Receive a variable length message up to length of buffer.
-    """
+    """ ************************************************
+        Receive a variable length message
+        up to length of buffer.
+    """ ************************************************
     async def rcv_msg(self):
         
         msg_len = await self.rcv_msg_length()
@@ -142,7 +146,6 @@ class I2CResponder(I2CResponderBase):
                 # if 0 bytes received, something's wrong
                 if n_bytes == 0:
                     self.trace("r03")
-
                 
                 # send back checksum
                 cs = calc_icmpv6_chksum.calc_icmpv6_chksum(self.buff[offs:offs+n_bytes])
@@ -151,7 +154,7 @@ class I2CResponder(I2CResponderBase):
                     self.trace("s02")
             
                 # receive checksum response
-                if await self.rcv_bytes(self.buff_2,0,1) != 1:
+                if await self.rcv_bytes(self.buff_2,0,2) < 2:
                     self.trace("r04")
                     self.buff_2[0] = _BLK_MSG_CHKSUM_ERR_RESENDING
             
@@ -192,14 +195,13 @@ class I2CResponder(I2CResponderBase):
             # echo length of message
             # first - flush any data Controller has sent us
             # not sure why it happens, but controller sometimes
-            # seems to think we sent something already
+            # seems to think we sent something already.
+            # This was greatly reduced by having Controller pause
+            # 2ms after sending length.
             ra = await self.await_send_rcv_avail()
             if ra == _RECEIVE_AVAILABLE:
                 n = await self.rcv_bytes(self.buff,0,1000)
-#                 print("(",end="")
-#                 print(self.buff_2,end=" ")
-#                 print(self.buff[0:n],end=" ")
-#                 print(n,end=") ")
+                self.trace("xtra" + str(n) )
             
             n = await self.snd_bytes(self.buff_2,0,2)
             if n != 2:
@@ -207,7 +209,7 @@ class I2CResponder(I2CResponderBase):
 
             # receive ack length okay or resend or cancel
             # self.await_send_rcv_avail()
-            if (await self.rcv_bytes(self.buff_2,0,1)) != 1:
+            if (await self.rcv_bytes(self.buff_2,0,2)) < 1:
                 self.trace("r02")
                 self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_RESEND
                 
@@ -223,7 +225,63 @@ class I2CResponder(I2CResponderBase):
         # cancelling send
         self.trace("cx01")
         return 0
+    
+    
+    """ ************************************************
+        Send a variable length message
+    """ ************************************************
+
+    async def send_msg(self, msg):
         
+        # send length of message
+        # UTF8 may have multibyte characters
+        buff = bytearray(msg.encode('utf8'))
+        rem_bytes = len(buff)
+        
+        len_buff = bytearray(rem_bytes.to_bytes(4,sys.byteorder))
+        await self.send_bytes(len_buff)
+        
+        # get back length from Controller
+        
+        # if length doesn't match, resend up to 8 times
+        
+        # acknowledge length matches
+        
+        
+        # send message
+        msg_pos = 0
+        
+        # if controller no longer requesting input
+        # stop sending data
+        while rem_bytes > 0: # and self.read_is_pending():
+            if rem_bytes <= 16:
+                await self.send_bytes(buff[msg_pos:])
+                return
+            
+            await self.send_bytes(buff[msg_pos:msg_pos+16])
+            msg_pos += 16
+            rem_bytes -= 16
+            
+            
+        
+
+    # Send a block bytes of up to 16 bytes of data
+    async def send_bytes(self,buffer_out):
+        for value in buffer_out:
+            # loop (polling) until the Controller issues an I2C READ.
+            while not self.read_is_pending():
+               await uasyncio.sleep_ms(0)
+            
+            # stop sending if controller no longer soliciting input
+            # if not self.read_is_pending():
+            #    return
+            
+            self.put_read_data(value)
+
+
+    """ ************************************************
+        Common routines used by both send and receive
+    """ ************************************************
         
     #
     # Receive up to n_bytes of data into buff
@@ -239,6 +297,9 @@ class I2CResponder(I2CResponderBase):
             if rw != _RECEIVE_AVAILABLE:
                 return i
             
+            # discard anything beyond end of buffer
+            if offs > len(buff):
+                b = (mem32[self.i2c_base | self.IC_DATA_CMD] & 0xFF)
             buff[offs] = (mem32[self.i2c_base | self.IC_DATA_CMD] & 0xFF)
             offs = offs + 1
         
@@ -459,47 +520,9 @@ class I2CResponder(I2CResponderBase):
         Then send blocks of up to 16 bytes.
     """
 
-    async def send_msg(self, msg):
-        
-        # send length of message
-        # UTF8 may have multibyte characters
-        buff = bytearray(msg.encode('utf8'))
-        rem_bytes = len(buff)
-        
-        len_buff = bytearray(rem_bytes.to_bytes(4,sys.byteorder))
-        await self.send_bytes(len_buff)
-        
-        # print("sending: " + str(len_buff))
-        
-        # send message
-        msg_pos = 0
-        
-        # if controller no longer requesting input
-        # stop sending data
-        while rem_bytes > 0: # and self.read_is_pending():
-            if rem_bytes <= 16:
-                await self.send_bytes(buff[msg_pos:])
-                return
-            
-            await self.send_bytes(buff[msg_pos:msg_pos+16])
-            msg_pos += 16
-            rem_bytes -= 16
-            
-    """
-        Send a block bytes of up to 16 bytes of data
-    """
-    async def send_bytes(self,buffer_out):
-        for value in buffer_out:
-            # loop (polling) until the Controller issues an I2C READ.
-            while not self.read_is_pending():
-               await uasyncio.sleep_ms(0)
-            
-            # stop sending if controller no longer soliciting input
-            # if not self.read_is_pending():
-            #    return
-            
-            self.put_read_data(value)
 
-    def trace(self,s,end=" "):
-        if self.trace:
-            print(s,end=end)
+    def print_trace(self,s,end=" "):
+        print(s,end=end)
+        
+    def no_trace(self,s,end=" "):
+        pass

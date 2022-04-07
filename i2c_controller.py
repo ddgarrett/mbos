@@ -59,6 +59,7 @@ class I2cController:
             
         self.buff_2 = bytearray(2)
         
+        self.msg_cnt    = 0
         self.resend_cnt = 0
         self.failed_cnt = 0
         
@@ -73,6 +74,8 @@ class I2cController:
     async def send_msg(self,addr,msg):
         # avoid garbage collection during a transmit?
         gc.collect()
+        
+        self.msg_cnt = self.msg_cnt + 1
         
         buff = bytearray(msg.encode("utf8"))
         
@@ -116,7 +119,7 @@ class I2cController:
         # or give up resending
         self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_RESEND
         retry_cnt = 8
-        i2c = self.i2c
+        # i2c = self.i2c
         
         while self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_RESEND:
         
@@ -125,7 +128,8 @@ class I2cController:
             self.i2c.writeto(addr,self.buff_2)
             
             # receive echo of length from responder
-            # print("rcvd length echo from responder: ",end="")
+            # wait to give sender time to send
+            await uasyncio.sleep_ms(2)
             self.i2c.readfrom_into(addr,self.buff_2)
             # self.buff_2[0:2] = bytearray(i2c.readfrom(addr,2))[0:2]
             i = int.from_bytes(self.buff_2,sys.byteorder)
@@ -149,7 +153,8 @@ class I2cController:
                     self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_CANCEL
             
             # send ack
-            self.i2c.writeto(addr,self.buff_2[0:1])
+            self.buff_2[1] = self.buff_2[0]
+            self.i2c.writeto(addr,self.buff_2)
             
             # TODO: read single byte to confirm continue or cancel?
             # last_send = self.buff_2[0:1]
@@ -197,7 +202,8 @@ class I2cController:
                     self.buff_2[0] = _BLK_MSG_CHKSUM_ERR_CANCEL
             
             # send ack
-            i2c.writeto(addr,self.buff_2[0:1])
+            self.buff_2[1] = self.buff_2[0]
+            i2c.writeto(addr,self.buff_2)
             
         # TODO: read single byte to confirm continue or cancel 
 

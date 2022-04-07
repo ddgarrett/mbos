@@ -39,7 +39,7 @@ async def main():
     # -----------------
     i2c_responder = I2CResponder(
         RESPONDER_I2C_DEVICE_ID, sda_gpio=GPIO_RESPONDER_SDA, scl_gpio=GPIO_RESPONDER_SCL,
-        responder_address=RESPONDER_ADDRESS
+        responder_address=RESPONDER_ADDRESS, trace=True
     )
     
     print('Testing I2CResponder v' + i2c_responder.VERSION)
@@ -51,6 +51,7 @@ async def main():
     # start I2C Responder Task
     uasyncio.create_task(i2c_responder.poll_snd_rcv())
     q_out = i2c_responder.q_out
+    q_in  = i2c_responder.q_in
     
     print("awaiting I2C data:")
     
@@ -62,12 +63,11 @@ async def main():
         if not q_out.empty():
             msg = await q_out.get()
             rcnt = rcnt + 1
-            print(rcnt,end=" ")
             
-            # print("i2c state (write/read): ",end="")
-            # print(i2c_responder.write_data_is_available(),end=" ")
-            # print(i2c_responder.read_is_pending())
-            
+            if len(msg) > 0:
+                # resend the message
+                await self.q_in.put(str(rcnt) + ": " + msg)
+                
         await uasyncio.sleep_ms(0)
         
 
