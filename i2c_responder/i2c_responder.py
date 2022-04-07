@@ -120,7 +120,7 @@ class I2CResponder(I2CResponderBase):
     """ ************************************************
         Receive a variable length message
         up to length of buffer.
-    """ ************************************************
+    ************************************************ """ 
     async def rcv_msg(self):
         
         msg_len = await self.rcv_msg_length()
@@ -229,59 +229,180 @@ class I2CResponder(I2CResponderBase):
     
     """ ************************************************
         Send a variable length message
-    """ ************************************************
+    ************************************************ """ 
 
     async def send_msg(self, msg):
         
         # send length of message
         # UTF8 may have multibyte characters
         buff = bytearray(msg.encode('utf8'))
-        rem_bytes = len(buff)
         
-        len_buff = bytearray(rem_bytes.to_bytes(4,sys.byteorder))
-        await self.send_bytes(len_buff)
+        # print("sending msg len: {}".format(len(buff)), end=" ")
         
-        # get back length from Controller
+        await self.snd_msg_length(len(buff))
+        if self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_CANCEL:
+            # print("msg length send error")
+            return False
         
-        # if length doesn't match, resend up to 8 times
+        # send message in 16 byte blocks
+        # with checksum after each block
+        msg_len        = len(buff)
+        offs           = 0
+        bytes_remain   = msg_len
         
-        # acknowledge length matches
-        
-        
-        # send message
-        msg_pos = 0
-        
-        # if controller no longer requesting input
-        # stop sending data
-        while rem_bytes > 0: # and self.read_is_pending():
-            if rem_bytes <= 16:
-                await self.send_bytes(buff[msg_pos:])
-                return
+        while bytes_remain > 0:
             
-            await self.send_bytes(buff[msg_pos:msg_pos+16])
-            msg_pos += 16
-            rem_bytes -= 16
+            # print("s",end=" ")
+            n = (await self.send_block(buff,offs,bytes_remain))
             
+            # print(n,end=" ")
+            
+            if self.buff_2[0] != _BLK_MSG_CHKSUM_OKAY:
+                # print("block send checksum error")
+                bytes_remain = 0
+            else:
+                # print("block send okay")
+                bytes_remain = bytes_remain - n
+                offs = offs + n
+                
+        
+        if self.buff_2[0] == _BLK_MSG_CHKSUM_OKAY:
+            return True
+        
+        return False            
             
         
 
-    # Send a block bytes of up to 16 bytes of data
-    async def send_bytes(self,buffer_out):
-        for value in buffer_out:
-            # loop (polling) until the Controller issues an I2C READ.
-            while not self.read_is_pending():
-               await uasyncio.sleep_ms(0)
-            
-            # stop sending if controller no longer soliciting input
-            # if not self.read_is_pending():
-            #    return
-            
-            self.put_read_data(value)
+    # Send message length and receive ack from Controller.
+    # Will retry send 8 times, leaving final result in self.buff_2[0]
+    async def snd_msg_length(self,length):
+        
+        # until send of length is okay
+        # or give up resending
+        self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_RESEND
+        retry_cnt = 8
+        
+        while self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_RESEND:
+        
+            # send 2 byte length
+            self.buff_2[0:2] = length.to_bytes(2,sys.byteorder)
+            n = await self.snd_bytes(self.buff_2,0,2)
+            if n != 2:
+                self.trace("sl10")
 
+            
+            # didn't receive 2 bytes before Controller requested a send
+            if (await self.rcv_bytes(self.buff_2,0,2)) != 2:
+                self.trace("sl11")
+                self.buff_2[0] = 0x00
+                self.buff_2[1] = 0x00
+            
+            i = int.from_bytes(bytes(self.buff_2),sys.byteorder)              
+
+        
+            # length okay?
+            if i == length:
+                self.buff_2[0] = _BLK_MSG_LENGTH_ACK_OK
+            else:
+                retry_cnt = retry_cnt - 1
+                if retry_cnt > 0:
+                    self.trace("sl12")
+                    self.resend_cnt = self.resend_cnt + 1
+                    self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_RESEND
+                else:
+                    self.failed_cnt = self.failed_cnt + 1
+                    self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_CANCEL
+            
+            # send ack
+            self.buff_2[1] = self.buff_2[0]
+            n = await self.snd_bytes(self.buff_2,0,2)
+            if n != 2:
+                self.trace("sl13")
+            
+            # TODO: read single byte to confirm continue or cancel?
+            # last_send = self.buff_2[0:1]
+        
+
+    # Send a given number of bytes from buff
+    # starting at offs.
+    # Responder should respond with a checksum after every block.
+    # If checksum wrong, retransmit the block.
+    # After 8 retransmits, cancel the send.
+    async def send_block(self,buff,offs,send_cnt):
+        
+        # until send of block is okay
+        # or give up resending
+        self.buff_2[0] = _BLK_MSG_CHKSUM_ERR_RESENDING
+        retry_cnt = 8
+        n = 0
+        
+        buff2 = bytearray(16)
+        
+        while self.buff_2[0] == _BLK_MSG_CHKSUM_ERR_RESENDING:
+        
+            # send as many bytes as the controller will accept
+            
+            # TEMP: limit to 16 bytes
+            s_cnt = 16
+            if send_cnt < s_cnt:
+                s_cnt = send_cnt
+                
+            # print("sb11 - ",end="")
+            n = (await self.snd_bytes(buff,offs,send_cnt))
+            # print(n,end="")
+            # print(", at {}, len {}".format(offs,s_cnt))
+            
+            # print("sent: ",end="")
+            # print(buff[offs:offs+s_cnt])
+            # receive 2 byte checksum from Responder
+            # didn't receive 2 bytes before Controller requested a send
+            # print("sb12")
+            """
+            rw = await self.await_send_rcv_avail()
+            while rw != _RECEIVE_AVAILABLE:
+                n = (await self.snd_bytes(buff,offs,s_cnt))
+                print("sent extra {} bytes".format(n))
+                rw = await self.await_send_rcv_avail()
+            """
+            
+            r11 = await self.rcv_bytes(self.buff_2,0,2)
+            if r11 != 2:
+                self.trace("sb11-")
+                self.trace(str(r11))
+                self.buff_2[0] = 0x00
+                self.buff_2[1] = 0x00
+                
+            i = int.from_bytes(self.buff_2,sys.byteorder)
+            
+            cs = calc_icmpv6_chksum.calc_icmpv6_chksum(buff[offs:offs+n]) 
+        
+            # checksum okay?
+            # self.trace("\n(cs: {}, i: {}, n:{})".format(cs,i,n))
+            if i == cs:
+                self.buff_2[0] = _BLK_MSG_CHKSUM_OKAY
+            else:
+                retry_cnt = retry_cnt - 1
+                if retry_cnt > 0:
+                    self.resend_cnt = self.resend_cnt + 1
+                    self.trace("sb12")
+                    self.buff_2[0] = _BLK_MSG_CHKSUM_ERR_RESENDING
+                else:
+                    self.failed_cnt = self.failed_cnt + 1
+                    self.buff_2[0] = _BLK_MSG_CHKSUM_ERR_CANCEL
+            
+            # send ack
+            self.buff_2[1] = self.buff_2[0]               
+            m = await self.snd_bytes(self.buff_2,0,2)
+            if m != 2:
+                self.trace("sb13")
+            
+        # TODO: read single byte to confirm continue or cancel 
+
+        return n
 
     """ ************************************************
         Common routines used by both send and receive
-    """ ************************************************
+    ************************************************ """ 
         
     #
     # Receive up to n_bytes of data into buff

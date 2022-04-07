@@ -80,13 +80,15 @@ async def main():
     print("result: ",end="")
     print(result)
     
+    
     print("receiving msg")
     
     msg = await controller.rcv_msg(addr)
     if len(msg) > 0:
         print("rcvd: " + msg)
     
-    return
+    
+    # return
     
     xmit_msg = """["temp_humid", "lcd", "<class 'XmitLcd'>", ["clear", {"msg": "⏶ Temp:\n⏷ Humidity:"}]]"""
     
@@ -97,15 +99,20 @@ async def main():
     ticks_start = utime.ticks_us()
     
     repeat_cnt = 100
+    m = 2
     
     for i in range(repeat_cnt):
         # print(i,end=" ")
         
         r = await controller.send_msg(addr,xmit_msg)
+        """
         if not r:
             print("retrying failed msg")
             r = await controller.send_msg(addr,xmit_msg)
             print(r)
+        """
+            
+        msg = await controller.rcv_msg(addr)
         
     ticks_end = utime.ticks_us()
     
@@ -115,10 +122,10 @@ async def main():
     print(controller.failed_cnt )
     
     ticks = (ticks_end - ticks_start)/repeat_cnt
-    print("{:.2f}ms per msg".format(ticks/1000))
+    print("{:.2f}ms per msg".format(ticks/1000*m))
     
     msg_len = len(bytearray(xmit_msg.encode("utf8")))
-    chr_sec = msg_len/ticks*1000*1000
+    chr_sec = msg_len/ticks*1000*1000*m
     print("{:.0f}cps xmit".format(chr_sec))
     
     

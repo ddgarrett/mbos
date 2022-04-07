@@ -58,15 +58,23 @@ async def main():
     # Check i2c responder output q
     print("rcv: ",end="")
     rcnt = 0
+    scnt = 0
     while True:
         
         if not q_out.empty():
             msg = await q_out.get()
             rcnt = rcnt + 1
             
+            print("r{}".format(rcnt), end=" ")
+            
             if len(msg) > 0:
                 # resend the message
-                await self.q_in.put(str(rcnt) + ": " + msg)
+                resend =  msg
+                scnt = scnt + 1
+                # resend = "test a much much much much much longer send message"
+                # print("sending :",resend)
+                await q_in.put(resend)
+                print("s{}".format(scnt),end=" ")
                 
         await uasyncio.sleep_ms(0)
         

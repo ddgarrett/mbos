@@ -57,7 +57,9 @@ class I2cController:
         else:
             self.i2c = i2c
             
-        self.buff_2 = bytearray(2)
+        self.buff_2  = bytearray(2)
+        self.buff_16 = bytearray(16)
+        self.buff    = bytearray(1024)
         
         self.msg_cnt    = 0
         self.resend_cnt = 0
@@ -68,6 +70,10 @@ class I2cController:
     def scan(self):
         return self.i2c.scan()
     
+    """ ************************************************
+        Send a variable length message
+    ************************************************ """ 
+
     # TODO: add await uasyncio.sleep_ms(0)
     # to allow other tasks to execute
     # while waiting for I2C io
@@ -207,6 +213,106 @@ class I2cController:
             
         # TODO: read single byte to confirm continue or cancel 
 
+    """ ************************************************
+        Receive a variable length message
+    ************************************************ """ 
+    async def rcv_msg(self, addr):
+        
+        msg_len = await self.rcv_msg_length(addr)
+        blk_len = 16
+        offs    = 0
+        rem_cnt = msg_len
+        
+        # print("message length: {}".format(msg_len),end=" ")
+        
+        # read block with up to 16 bytes until the message is completely received
+        while (rem_cnt > 0):
+            # print("rem_cnt: {}".format(rem_cnt))
+            cnt  = blk_len
+            # buff = self.buff_16
+            if rem_cnt < blk_len:
+                cnt = rem_cnt
+                # buff = bytearray(cnt)
+                
+            buff = await self.rcv_block(addr,cnt)
+            
+            if self.buff_2[0] == _BLK_MSG_CHKSUM_ERR_CANCEL:
+                # print("error checksum cancel")
+                return ""
+            
+            # print(".",end="")
+            self.buff[offs:offs+cnt] = buff
+            offs = offs + cnt
+            rem_cnt = rem_cnt - cnt
+
+            # Increas to give sender time to send?
+            await uasyncio.sleep_ms(0) # play nice with coroutines
+            
+        # print("")
+        # print(self.buff[0:msg_len])
+        return self.buff[0:msg_len].decode('utf8')
+
+    # receive a 2 byte length
+    async def rcv_msg_length(self,addr):
+        self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_RESEND
+        
+        while self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_RESEND:
+        
+            # read length of message
+            self.i2c.readfrom_into(addr,self.buff_2)
+            msg_len = int.from_bytes(self.buff_2,sys.byteorder)
+            
+            # echo message length
+            self.i2c.writeto(addr,self.buff_2)
+            
+            # read ack
+            self.i2c.readfrom_into(addr,self.buff_2)
+            
+            if self.buff_2[0] == _BLK_MSG_LENGTH_ACK_OK:
+                return msg_len
+         
+            # self.trace("rt10")
+            
+        # not ack msg length okay or resend
+        # cancelling send
+        # self.trace("cx11")
+        return 0
+        
+    # Receive a block into buff.
+    # Length of buff must be number of bytes to receive.
+    # Send checksum after each block and
+    # wait for responder to acknowledge.
+    # Final ack is in buff_2.
+    async def rcv_block(self,addr,blk_len):
+        
+        buff = bytearray(blk_len)
+        # print("rcv blk {}".format(len(buff)))
+        
+        self.buff_2[0] = _BLK_MSG_CHKSUM_ERR_RESENDING
+        
+        while self.buff_2[0] == _BLK_MSG_CHKSUM_ERR_RESENDING:
+            
+            # receive 16 byte block
+            self.i2c.readfrom_into(addr,buff)
+            # print("read data: {}".format(buff))
+        
+            # send back checksum
+            #await uasyncio.sleep_ms(2)
+            cs = calc_icmpv6_chksum.calc_icmpv6_chksum(buff)
+            self.buff_2[0:2] = cs.to_bytes(2,sys.byteorder)
+            self.i2c.writeto(addr,self.buff_2)
+            # print("sent cs: {}".format(cs))
+            
+            # receive ack
+            # May be causing problems?
+            # try waiting to give receiver time to receive?
+            # await uasyncio.sleep_ms(2)
+            self.i2c.readfrom_into(addr,self.buff_2)
+            
+            # print("cs resp: {}".format(int(self.buff_2[0])))
+
+        return buff
+            
     """
         Previous version of code below
 
@@ -271,7 +377,7 @@ class I2cController:
         addr = address of the I2C device to send the message to
         buff  = the byte array to send
     """
-    async def send_bytes(self, addr, buff, checksum):
+    async def send_bytes_v1(self, addr, buff, checksum):
 
         rem_bytes = len(buff)
         # writeblk = self.i2c.writeto  # slight performance boost
@@ -314,7 +420,7 @@ class I2cController:
             
     # read a message sent by a responders
     # and return to caller
-    async def rcv_msg(self, addr):
+    async def rcv_msg_v01(self, addr):
         # readblk = self.i2c.readfrom # slight performance boost
         
         # read first block containing length of message
