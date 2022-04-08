@@ -47,9 +47,9 @@ class ModuleService(Service):
 
             # send a quick burst of 10 messages
             # print("************************** svc_test_i2c: ")
-            for i in range(1):
+            for i in range(10):
                 await self.send_msg("remote_log","test forwarded message!")
-                # await uasyncio.sleep_ms(500)
+                await uasyncio.sleep_ms(333)
 
             await uasyncio.sleep_ms(0)
 
