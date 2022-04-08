@@ -116,8 +116,9 @@ async def main():
         
     ticks_end = utime.ticks_us()
     
-    print("total/resend/failed cnt: ",end="")
-    print(controller.msg_cnt,end="/")
+    print("send/rcv/resend/failed cnt: ",end="")
+    print(controller.send_cnt,end="/")
+    print(controller.rcv_cnt,end="/")
     print(controller.resend_cnt,end="/")
     print(controller.failed_cnt )
     
