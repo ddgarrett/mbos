@@ -1,5 +1,5 @@
 from machine import mem32
-# import time
+
 import sys
 import uasyncio
 from i2c_responder_base import I2CResponderBase
@@ -21,13 +21,9 @@ _BLK_MSG_CHKSUM_OKAY           = const(127 + 4)
 _BLK_MSG_CHKSUM_ERR_RESENDING  = const(127 + 5)
 _BLK_MSG_CHKSUM_ERR_CANCEL     = const(127 + 6)
 
-_TXN_CONTINUE                  = const(127+16)
-_TXN_CANCEL                    = const(127+17)
-
-
-
 class I2CResponder(I2CResponderBase):
-    """Implementation of a (polled) Raspberry Pico I2C Responder.
+    """
+        Implementation of a (polled) Raspberry Pico I2C Responder.
 
         Subclass of the original I2CResponder class which has been renamed
         I2CReponderBase. See that class for more info.
@@ -37,10 +33,8 @@ class I2CResponder(I2CResponderBase):
         
         Created: March 30, 2022  By: D. Garrett
         
-    
     """
     VERSION = "3.0.1"
-
 
     def __init__(self, i2c_device_id=0, sda_gpio=0, scl_gpio=1, responder_address=0x41,
                  q_in_size=30, q_out_size=30, trace=False):
@@ -89,9 +83,6 @@ class I2CResponder(I2CResponderBase):
     #
     async def poll_snd_rcv(self):
         
-        q_in  = self.q_in
-        q_out = self.q_out
-        
         while True:
             
             # check first to see if I2C Controller is polling for input
@@ -126,7 +117,6 @@ class I2CResponder(I2CResponderBase):
         msg_len = await self.rcv_msg_length()
         
         if msg_len == 0:
-            # print("msg_len 0")
             return ""
         
         if msg_len > len(self.buff):
@@ -171,8 +161,7 @@ class I2CResponder(I2CResponderBase):
             # decrement number of bytes remaining and increment offset
             offs = offs + n_bytes
             bytes_remain = bytes_remain - n_bytes
-            
-            
+               
         # return received string 
         return self.buff[0:msg_len].decode('utf8')
             
@@ -213,9 +202,6 @@ class I2CResponder(I2CResponderBase):
                 self.trace("r02")
                 self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_RESEND
                 
-            # echo last ack?
-            # n = await self.snd_bytes(self.buff_2,0,1)
-            
             if self.buff_2[0] == _BLK_MSG_LENGTH_ACK_OK:
                 return i
             
@@ -237,11 +223,8 @@ class I2CResponder(I2CResponderBase):
         # UTF8 may have multibyte characters
         buff = bytearray(msg.encode('utf8'))
         
-        # print("sending msg len: {}".format(len(buff)), end=" ")
-        
         await self.snd_msg_length(len(buff))
         if self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_CANCEL:
-            # print("msg length send error")
             return False
         
         # send message in 16 byte blocks
@@ -252,16 +235,11 @@ class I2CResponder(I2CResponderBase):
         
         while bytes_remain > 0:
             
-            # print("s",end=" ")
             n = (await self.send_block(buff,offs,bytes_remain))
             
-            # print(n,end=" ")
-            
             if self.buff_2[0] != _BLK_MSG_CHKSUM_OKAY:
-                # print("block send checksum error")
                 bytes_remain = 0
             else:
-                # print("block send okay")
                 bytes_remain = bytes_remain - n
                 offs = offs + n
                 
@@ -289,7 +267,6 @@ class I2CResponder(I2CResponderBase):
             n = await self.snd_bytes(self.buff_2,0,2)
             if n != 2:
                 self.trace("sl10")
-
             
             # didn't receive 2 bytes before Controller requested a send
             if (await self.rcv_bytes(self.buff_2,0,2)) != 2:
@@ -298,7 +275,6 @@ class I2CResponder(I2CResponderBase):
                 self.buff_2[1] = 0x00
             
             i = int.from_bytes(bytes(self.buff_2),sys.byteorder)              
-
         
             # length okay?
             if i == length:
@@ -318,10 +294,6 @@ class I2CResponder(I2CResponderBase):
             n = await self.snd_bytes(self.buff_2,0,2)
             if n != 2:
                 self.trace("sl13")
-            
-            # TODO: read single byte to confirm continue or cancel?
-            # last_send = self.buff_2[0:1]
-        
 
     # Send a given number of bytes from buff
     # starting at offs.
@@ -347,24 +319,9 @@ class I2CResponder(I2CResponderBase):
             if send_cnt < s_cnt:
                 s_cnt = send_cnt
                 
-            # print("sb11 - ",end="")
             n = (await self.snd_bytes(buff,offs,send_cnt))
-            # print(n,end="")
-            # print(", at {}, len {}".format(offs,s_cnt))
             
-            # print("sent: ",end="")
-            # print(buff[offs:offs+s_cnt])
-            # receive 2 byte checksum from Responder
-            # didn't receive 2 bytes before Controller requested a send
-            # print("sb12")
-            """
-            rw = await self.await_send_rcv_avail()
-            while rw != _RECEIVE_AVAILABLE:
-                n = (await self.snd_bytes(buff,offs,s_cnt))
-                print("sent extra {} bytes".format(n))
-                rw = await self.await_send_rcv_avail()
-            """
-            
+            # receive 2 byte checksum from Responder            
             r11 = await self.rcv_bytes(self.buff_2,0,2)
             if r11 != 2:
                 self.trace("sb11-")
@@ -377,7 +334,6 @@ class I2CResponder(I2CResponderBase):
             cs = calc_icmpv6_chksum.calc_icmpv6_chksum(buff[offs:offs+n]) 
         
             # checksum okay?
-            # self.trace("\n(cs: {}, i: {}, n:{})".format(cs,i,n))
             if i == cs:
                 self.buff_2[0] = _BLK_MSG_CHKSUM_OKAY
             else:
@@ -396,8 +352,6 @@ class I2CResponder(I2CResponderBase):
             if m != 2:
                 self.trace("sb13")
             
-        # TODO: read single byte to confirm continue or cancel 
-
         return n
 
     """ ************************************************
@@ -434,11 +388,7 @@ class I2CResponder(I2CResponderBase):
     # before requested number of bytes was sent
     # or a _RECEIVE_AVAILABLE request was received.
     #
-    async def snd_bytes(self,buff,offs,n_bytes):
-        # await send available
-        # while (await self.await_send_rcv_avail()) != _SEND_AVAILABLE:
-        #    await uasyncio.sleep_ms(0)
-            
+    async def snd_bytes(self,buff,offs,n_bytes):            
         for i in range(n_bytes):
             rw = await self.await_send_rcv_avail()
             if rw != _SEND_AVAILABLE:
@@ -448,7 +398,6 @@ class I2CResponder(I2CResponderBase):
             
         return n_bytes
                     
-        
     # loop until we get a write avail or read requested.
     # Return either _RECEIVE_AVAILABLE, if Controller is ready to send data
     # or _SEND_AVAILABLE if Controller is ready receive data
@@ -461,187 +410,6 @@ class I2CResponder(I2CResponderBase):
             
             await uasyncio.sleep_ms(0)
         
-    """
-        Version 1 code
-
-    """
-
-                
-    """
-        Read a long message from the Controller.
-        
-        Send an acknowledgment to the Controller of
-        if the receive was successful.
-          
-        If receive failed, retry up to 5 times, then send 2
-        telling controller it was a permanent error and
-        don't bother to resend.
-        
-        If failed receive, returns an empty string,
-        else returns the string received.
-    """
-    
-    """
-    async def rcv_msg_v01(self):
-        
-        if not self.write_data_is_available():
-            return ""
-        
-        retry = 8
-        ok = False
-        
-        while not ok and retry > 0:
-            b_array, ok = await self.rcv_block()
-            
-            retry = retry - 1
-            
-            if retry > 0:
-                # Controller will resend if not okay
-                await self.send_ack(int(ok))
-                
-                if not ok:
-                       
-                    print("receive error... ",end="")
-                    print((5-retry))
-                    print("received: ", end="")
-                    print(b_array)
-
-                    
-                    # await uasyncio.sleep_ms(0)
-            else:
-                # permanent error - don't resend
-                print("***** permanent receive error *****")
-                await self.send_ack(2) 
-
-        if ok:
-            # don't try to decode invalid receive.
-            # may result in decode error.
-            return b_array.decode('utf8')
-        else:
-            return ""
-    """
-                    
-    """
-        Send a 2 byte int acknowledgement to the Controller of
-        message received.
-        1 = message received ok and checksum matched
-        0 = message not received ok, resend
-        2 = message not received ok, but don't resend
-    """
-    """
-    async def send_ack(self, ok):
-        b = bytearray(ok.to_bytes(2,sys.byteorder))
-        await self.send_bytes(b)
-    """
-    
-    """
-        Receive a byte array data where the first two bytes
-        of the input stream contain the msg length and the
-        next two contain a checksum.
-        
-        Return a byte array of data and True/False for if the
-        checksum matched.
-    """
-    """
-    async def rcv_block(self):
-        
-        # read length of message and checksum
-        data = self.get_write_data(max_size=4)
-        n_bytes = int.from_bytes(bytes(data[0:2]),sys.byteorder)
-        chksum = int.from_bytes(bytes(data[2:4]),sys.byteorder)
-        
-        
-        print("rcv bytes: ",end="")
-        print(n_bytes, end="")
-        print(", checksum: ",end="")
-        print(chksum)
-        
-        
-        r = await self.rcv_bytes(n_bytes)
-
-        # print("returning results")
-        # r = bytearray(data)
-        cs = calc_icmpv6_chksum.calc_icmpv6_chksum(r)
-        
-        # wait until all sent data is received
-        # and controller issues a read for the ack
-        while not self.read_is_pending():
-            if self.write_data_is_available():
-                self.get_write_data(max_size=16)
-                
-        
-        return r, cs == chksum
-    """   
-        
-    """
-        Receive bytes in blocks of 16 bytes or less until
-        n_bytes of data received or "times out".
-        
-        Here, "times out" means no bytes received
-        for 50ms.
-        
-        Returns a list of bytes.
-    """
-    """
-    async def rcv_bytes(self, rem_bytes):
-       
-        data = bytearray(rem_bytes)
-        data_offset = 0
-        wait_cnt = 0
-        
-        empty = []
-        
-        while rem_bytes > 0:
-                
-            if self.write_data_is_available():
-                b = self.get_write_data(max_size=16)
-            else:
-                b = empty
-
-            if len(b) == 0:
-                print("+",end="")
-                await uasyncio.sleep_ms(5)
-                wait_cnt = wait_cnt + 1
-                if wait_cnt > 50:
-                    # time out receive - exit early
-                    # print("i2c_responder.rcv_msg() tired of waiting, exiting before EOD")
-                    return data[:data_offset] 
-            else:
-                wait_cnt = 0
-                r_cnt = len(b)
-                rem_bytes = rem_bytes - r_cnt
-                
-                for i in range(r_cnt):
-                    data[data_offset] = b[i]
-                    data_offset = data_offset + 1
-                
-
-                if rem_bytes > 0 and r_cnt != 16:
-                    # received a short block
-                    print("**** <16 bytes in block: ", end="")
-                    print(len(b))
-                    return data[:data_offset] 
-                
-                    
-                
-                print("v2 rcvd '", end="")
-                print(bytearray(b),end="")
-                print("' blk remain: ",end="")
-                print(rem_bytes)
-                
-                
-        return data
-    """
-
-    """
-        Send a long message to the Controller
-        16 bytes at a time.
-        
-        First send 4 byte length of message.
-        Then send blocks of up to 16 bytes.
-    """
-
-
     def print_trace(self,s,end=" "):
         print(s,end=end)
         
