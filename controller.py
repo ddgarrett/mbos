@@ -37,8 +37,12 @@ def get_i2c(parms):
     
     if resp_addr != None:
         # we're an I2C Responder
-        return I2CResponder(bus, sda_gpio=sda, scl_gpio=scl,
+        i2cr = I2CResponder(bus, sda_gpio=sda, scl_gpio=scl,
                             responder_address=resp_addr)
+        
+        uasyncio.create_task(i2cr.poll_snd_rcv())
+        
+        return i2cr
         
     # we're an I2C Controller
     return I2C(bus, sda=Pin(sda), scl=Pin(scl), freq=freq)
@@ -63,8 +67,7 @@ async def main(parms):
     print("ctrl: creating I2C object")
     defaults = parms["defaults"]
     defaults["i2c"] = get_i2c(defaults)
-    defaults["i2c_1"] = get_i2c_bus_1(defaults)
-        
+    defaults["i2c_1"] = get_i2c_bus_1(defaults)        
     # Create svc_lookup, a dictionary of Services
     # where the servcie can be looked up by name
     print("ctrl: creating lookup list of Services")
@@ -78,7 +81,7 @@ async def main(parms):
         
     print("ctrl: starting services")
     for key, svc in svc_lookup.items():
-        print("... " + key)
+        # print("... " + key)
         uasyncio.create_task(svc.run())
     
     log_svc = "log"
@@ -107,7 +110,7 @@ async def main(parms):
             if pass_cnt <= 0:
                 pass_cnt = 5
                 # await q_log.put(XmitMsg("controller","log","doing gc.collect()"))
-                gc.collect()
+                # gc.collect()
             
         # allow co-routines to execute
         await uasyncio.sleep_ms(0)

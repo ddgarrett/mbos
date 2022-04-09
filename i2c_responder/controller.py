@@ -67,8 +67,7 @@ async def main(parms):
     print("ctrl: creating I2C object")
     defaults = parms["defaults"]
     defaults["i2c"] = get_i2c(defaults)
-    defaults["i2c_bus_1"] = get_i2c_bus_1(defaults)
-        
+    defaults["i2c_1"] = get_i2c_bus_1(defaults)        
     # Create svc_lookup, a dictionary of Services
     # where the servcie can be looked up by name
     print("ctrl: creating lookup list of Services")
