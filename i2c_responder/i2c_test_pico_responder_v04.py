@@ -65,8 +65,10 @@ async def main():
             msg = await q_out.get()
             rcnt = rcnt + 1
             
-            print("r{}".format(rcnt), end=" ")
+            # print("r{}".format(rcnt), end=" ")
+            print("+",end="")
             
+            """
             if len(msg) > 0:
                 # resend the message
                 resend =  msg
@@ -74,7 +76,8 @@ async def main():
                 # resend = "test a much much much much much longer send message"
                 # print("sending :",resend)
                 await q_in.put(resend)
-                print("s{}".format(scnt),end=" ")
+                # print("s{}".format(scnt),end=" ")
+            """
                 
         await uasyncio.sleep_ms(0)
         

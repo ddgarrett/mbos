@@ -37,8 +37,12 @@ def get_i2c(parms):
     
     if resp_addr != None:
         # we're an I2C Responder
-        return I2CResponder(bus, sda_gpio=sda, scl_gpio=scl,
+        i2cr = I2CResponder(bus, sda_gpio=sda, scl_gpio=scl,
                             responder_address=resp_addr)
+        
+        uasyncio.create_task(i2cr.poll_snd_rcv())
+        
+        return i2cr
         
     # we're an I2C Controller
     return I2C(bus, sda=Pin(sda), scl=Pin(scl), freq=freq)
@@ -78,6 +82,7 @@ async def main(parms):
         
     print("ctrl: starting services")
     for key, svc in svc_lookup.items():
+        # print("... " + key)
         uasyncio.create_task(svc.run())
     
     log_svc = "log"

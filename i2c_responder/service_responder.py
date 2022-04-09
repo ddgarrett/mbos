@@ -47,9 +47,9 @@ class ModuleService(Service):
         # if it was, pass it to the input queue for the "to" service
         for svc in svc_lookup.values():
             q_svc_output = svc.get_output_queue()
-            
             if not q_svc_output.empty():
                 xmit = await q_svc_output.get()
+                # print(xmit.dumps())
                 
                 # pass message to queue for specified service
                 to = xmit.get_to()
@@ -92,6 +92,7 @@ class ModuleService(Service):
         # just present during initial testing
         # eventually remove this loop
         while True:
+            # print("r",end="")
             # make sure no messages in my input queue
             await uasyncio.sleep_ms(1000) 
             if not q_input.empty():

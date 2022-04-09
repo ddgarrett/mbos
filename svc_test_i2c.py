@@ -24,6 +24,8 @@ class ModuleService(Service):
 
     async def run_test(self):
         
+        controller = self.get_parm("i2c_controller",None)
+        
         xmit = xmit_lcd.XmitLcd(fr=self.name).clear_screen()
         xmit.set_msg("⏶ press any key" + "\n⏷ to start tests\n    sent: ")
         await self.put_to_output_q(xmit)
@@ -31,6 +33,11 @@ class ModuleService(Service):
         
         xmit = xmit_lcd.XmitLcd(fr=self.name)
         xmit.set_cursor(10,2).set_msg(str(self.send_cnt))
+        
+        m = "s{} r{} x{} f{}".format(controller.send_cnt,
+                controller.rcv_cnt, controller.resend_cnt, controller.failed_cnt )
+            
+        xmit.set_cursor(0,3).set_msg(m)
         await self.put_to_output_q(xmit)
         
         while True:
@@ -49,8 +56,15 @@ class ModuleService(Service):
             # print("************************** svc_test_i2c: ")
             for i in range(10):
                 await self.send_msg("remote_log","test forwarded message!")
-                await uasyncio.sleep_ms(333)
+                await uasyncio.sleep_ms(600)
 
+                m = "s{} r{} x{} f{}".format(controller.send_cnt,
+                    controller.rcv_cnt, controller.resend_cnt, controller.failed_cnt )
+
+                xmit = xmit_lcd.XmitLcd(fr=self.name)            
+                xmit.set_cursor(0,3).set_msg(m)
+                await self.put_to_output_q(xmit)
+            
             await uasyncio.sleep_ms(0)
 
 

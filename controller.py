@@ -78,6 +78,7 @@ async def main(parms):
         
     print("ctrl: starting services")
     for key, svc in svc_lookup.items():
+        print("... " + key)
         uasyncio.create_task(svc.run())
     
     log_svc = "log"

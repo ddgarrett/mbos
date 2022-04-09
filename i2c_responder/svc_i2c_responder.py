@@ -28,44 +28,29 @@ class ModuleService(Service):
     async def run(self):
         q_in  = self.input_queue
         q_out = self.output_queue
+        
         i2c_responder = self.get_i2c()
-                
+        i2c_q_in  = i2c_responder.q_in
+        i2c_q_out = i2c_responder.q_out
+        
         while True:
             
-            io = False
-            
-            # is controller waiting for us to send data?
-            while i2c_responder.read_is_pending():
-                if not q_in.empty():
-                    xmit = await q_in.get()
-                    print("i2c_svc input q: " + xmit.dumps())
-                    await i2c_responder.send_msg(xmit.dumps())
-                    # await i2c_responder.send_msg("")
-                    io = True
-                else:
-                    await i2c_responder.send_msg("")
+            # pass any input messages to i2c responder
+            # after converting to string
+            while not q_in.empty():
+                xmit = await q_in.get()
+                if not i2c_q_in.full():
+                    await i2c_q_in.put(xmit.dumps())
+                    
 
-                
-            # is controller trying to send us some data?
-            while i2c_responder.write_data_is_available():
-
-                msg = await i2c_responder.rcv_msg()
-                
+            # pass any messages received by the i2c responder
+            # to my output queue, after unwrapping the message
+            while not i2c_q_out.empty():
+                msg = await i2c_q_out.get()
                 if len(msg) > 0:
                     xmit = XmitMsg(msg=msg)
                     xmit.unwrapMsg()
                     await q_out.put(xmit)
-                    io = True
-    
-                """
-                print("rcv msg (",end="")
-                print(len(msg),end="")
-                print("): " + msg )
-                """
-                
+            
             # gc.collect()
             await uasyncio.sleep_ms(0)
-                            
-
-    
-

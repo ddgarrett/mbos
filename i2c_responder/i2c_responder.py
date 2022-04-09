@@ -37,7 +37,7 @@ class I2CResponder(I2CResponderBase):
     VERSION = "3.0.1"
 
     def __init__(self, i2c_device_id=0, sda_gpio=0, scl_gpio=1, responder_address=0x41,
-                 q_in_size=30, q_out_size=30, trace=False):
+                 q_in_size=30, q_out_size=30, trace=True):
         """Initialize.
 
         Args:
@@ -90,8 +90,10 @@ class I2CResponder(I2CResponderBase):
                 if self.q_in.empty():
                     await self.send_msg("")
                 else:
+                    # print("+",end="")
                     msg = (await self.q_in.get())
                     await self.send_msg(msg)
+
                     
             # check to see if I2C Controller is waiting to send us a message
             if self.write_data_is_available():
@@ -103,7 +105,9 @@ class I2CResponder(I2CResponderBase):
                 if (len(msg) > 0) and (not self.q_out.full()):
                     # TODO: catch error just in case?
                     # Impossible if we are only task putting msg in queue?
+                    # print("-",end="")
                     await self.q_out.put(msg)
+
                     
             await uasyncio.sleep_ms(0) 
                     
@@ -125,6 +129,11 @@ class I2CResponder(I2CResponderBase):
         # now receive the actual message
         bytes_remain = msg_len
         offs = 0
+        
+        prev_cs_err = False
+        
+        blk_cnt = 0
+        
         while bytes_remain > 0:
             
             # Read a block of data 
@@ -151,7 +160,18 @@ class I2CResponder(I2CResponderBase):
                 # if chksum error, print
                 if self.buff_2[0] == _BLK_MSG_CHKSUM_ERR_RESENDING:
                     self.trace("rs02")
+                    self.trace("blk"+str(blk_cnt))
+                    self.trace(cs)
+                    prev_cs_err = True
+                else:
+                    if prev_cs_err:
+                        self.trace("rs02-ok")
+                        self.trace(cs)
+                        
+                    prev_cs_err = False
                 
+            blk_cnt += 1
+            
             # checksum error after n retries - return empty string
             if self.buff_2[0] != _BLK_MSG_CHKSUM_OKAY:
                 self.trace("cs01")

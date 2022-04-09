@@ -61,8 +61,8 @@ class ModuleService(Service):
                     q_svc_input = svc_lookup[to].get_input_queue()
 
                     # avoid logging my sending a message to log
-                    if to != "log":
-                        xmit_passed = True
+                    # if to != "log":
+                    xmit_passed = True
                         
                     await q_svc_input.put(xmit)
                     

@@ -36,18 +36,25 @@ class ModuleService(Service):
         # sda = self.get_parm("i2c_sda_pin",0)
         # self.controller = I2cController(scl_pin=scl, sda_pin=sda )
         
-        i2c = self.get_i2c_bus_1()
+        i2c = self.get_i2c()
         self.controller = I2cController(i2c=i2c )
         
         # self.controller = self.get_i2c()
         
         # responder addresses
+        """
         addr = self.get_parm("resp_addr",[])
         self.resp_addr = []
         for a in addr:
             self.resp_addr.append(int(a))
+        """
             
         # await self.log_msg("i2c polling: "+str(self.resp_addr))
+        
+        # place self.controller in default parms so other
+        # services can access stats
+        defaults = self.svc_parms["defaults"]
+        defaults["i2c_controller"] = self.controller
         
         
 
@@ -63,6 +70,8 @@ class ModuleService(Service):
             a = int(a)
             if a in poll_addr:
                 poll_addr.remove(a)
+        
+        # print("polling addresses: " + str(poll_addr))
         
         await self.log_msg("polling addresses: " + str(poll_addr))
         
@@ -89,16 +98,21 @@ class ModuleService(Service):
             for addr in poll_addr:
                 msg = await self.controller.rcv_msg(addr)
                 
-                if len(msg) > 0:
+                while len(msg) > 0:
                     # unwrap the message and place on output queue
                     xmit = XmitMsg(msg=msg)
                     xmit.unwrapMsg()
-                    await q_out.put(xmit)                    
+                    await q_out.put(xmit)
+                    msg = await self.controller.rcv_msg(addr)
+                    
+                    await uasyncio.sleep_ms(0)
                     
                 await uasyncio.sleep_ms(0)
-                    
-            # wait 1/10 second before polling I2C bus again
-            await uasyncio.sleep_ms(100)
+                
+            # wait 1/3 second before polling I2C bus again
+            # TODO: base wait on number of ticks since last wait?
+            #  - wait for at least 333 ticks since last polling
+            await uasyncio.sleep_ms(333)
                             
 
     

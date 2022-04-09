@@ -93,6 +93,9 @@ class I2cController:
         offs           = 0
         bytes_remain   = msg_len
         
+        # wait to give sender time to before first block sent
+        await uasyncio.sleep_ms(3)
+        
         while bytes_remain > 0:
             
             bytes_send = 16
