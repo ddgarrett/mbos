@@ -5,12 +5,12 @@
 "main":"controller",
 "log_xmit": true,
 "controller":"controller",
-"log_svc"   :"remote_log",
+"log_svc"   :"0x41_log",
 
 "comment" : "This is the responder version of the json parm file",
 
 "defaults": { 
-    "log_svc"   :"remote_log",
+    "log_svc"   :"0x41_log",
     
     "q_in_size":10,
     "q_out_size":10,
@@ -30,13 +30,13 @@
     },
 
 "services": [
-    {"name":"controller",     "module":"service_responder",  "q_out_size":50, "i2c_svc":"i2c_svc" },
+    {"name":"controller",   "module":"service_responder",  "q_out_size":50, "i2c_svc":"i2c_svc" },
          
-    {"name":"i2c_svc",        "module":"svc_i2c_responder",  "q_in_size":1000,  "print_log":1 },
+    {"name":"i2c_svc",      "module":"svc_i2c_responder",  "q_in_size":1000,  "print_log":1 },
         
-    {"name":"remote_log",     "module":"service_print",      "q_in_size":1000,  "print_log":1 },
+    {"name":"0x41_log",     "module":"service_print",      "q_in_size":1000,  "print_log":1 },
         
-    {"name":"0x41_mem_use", "module":"service_mem_use"   }
+    {"name":"0x41_mem_use", "module":"service_mem_use" }
          
     ]
 }

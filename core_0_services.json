@@ -41,9 +41,8 @@
         
     {"name":"temp_humid", "module":"service_dht11_v02" },
         
-    {"name":"test_i2c",   "module":"svc_test_i2c" },
-    {"name":"remote_log", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" },
-    
+    {"name":"test_i2c",     "module":"svc_test_i2c", "send_to":"0x41_log" },
+    {"name":"0x41_log",   "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
     {"name":"0x41_mem_use", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" },
              
     {"name":"i2c_svc",    "module":"service_i2c_controller", "q_in_size":10, "q_out_size":10,
