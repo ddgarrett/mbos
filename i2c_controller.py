@@ -76,7 +76,7 @@ class I2cController:
     # while waiting for I2C io
     async def send_msg(self,addr,msg):
         # avoid garbage collection during a transmit?
-        gc.collect()
+        # gc.collect()
         
         self.send_cnt = self.send_cnt + 1 
         
@@ -208,7 +208,7 @@ class I2cController:
     ************************************************ """ 
     async def rcv_msg(self, addr):
         
-        gc.collect()
+        # gc.collect()
         
         msg_len = await self.rcv_msg_length(addr)
         
