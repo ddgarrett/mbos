@@ -69,6 +69,10 @@ class ModuleService(Service):
                     # should we log all messages passed from one service to another?
                     if log_xmit and xmit.to != "log":
                         await self.log_msg(xmit.dumps())
+                        
+                else:
+                    if log_xmit:
+                        await self.log_msg("ignore: " + xmit.dumps())
 
                 # allow co-routines to execute
                 # - not needed if we only process max one message per output queue
