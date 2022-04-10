@@ -58,6 +58,9 @@ class ModuleService(Service):
                 # forward message to i2c service to forward to remote Controller
                 if (to == "controller") or not (to in svc_lookup):
                     await i2c_q_in.put(xmit)
+                    
+                    if log_xmit:
+                        await self.log_msg(xmit.dumps())
                 else:
                     q_svc_input = svc_lookup[to].get_input_queue()
 
