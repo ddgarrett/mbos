@@ -4,7 +4,7 @@
 
 "main":"controller",
 "log_xmit": true,
-"controller":"controller", "controller todo":"change name to controller_svc?",
+"ctrl_svc":"controller",
 
 "defaults": { 
     "q_in_size":10,

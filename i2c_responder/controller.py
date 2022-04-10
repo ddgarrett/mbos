@@ -95,7 +95,8 @@ async def main(parms):
     log_xmit = ("log_xmit" in parms) and (parms["log_xmit"] == True)
     
     # controller service who does polling of output queues
-    controller_name = parms["controller"]
+    controller_name = parms["ctrl_svc"]
+    print("controller service: "+controller_name)
     controller_svc = svc_lookup[controller_name]
     
     pass_cnt = 5
