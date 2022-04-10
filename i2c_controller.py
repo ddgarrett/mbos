@@ -208,6 +208,8 @@ class I2cController:
     ************************************************ """ 
     async def rcv_msg(self, addr):
         
+        gc.collect()
+        
         msg_len = await self.rcv_msg_length(addr)
         
         if msg_len == 0:

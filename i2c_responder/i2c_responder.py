@@ -6,6 +6,9 @@ from i2c_responder_base import I2CResponderBase
 
 import calc_icmpv6_chksum
 import queue
+import utime
+
+import gc
 
 from micropython import const
 
@@ -83,10 +86,15 @@ class I2CResponder(I2CResponderBase):
     #
     async def poll_snd_rcv(self):
         
+        last_poll = utime.ticks_ms()
+        
         while True:
+            
+            # gc.collect() # causes errors in send length (of empty string?)
             
             # check first to see if I2C Controller is polling for input
             if self.read_is_pending():
+                last_poll = utime.ticks_ms()
                 if self.q_in.empty():
                     await self.send_msg("")
                 else:
@@ -108,7 +116,16 @@ class I2CResponder(I2CResponderBase):
                     # print("-",end="")
                     await self.q_out.put(msg)
 
-                    
+            # Service I2C Controller waits 333ms between polling of Responders.
+            # Make sure we have plenty of time to run gc
+            # before Controller polls again
+            if (not self.read_is_pending()
+                and not self.write_data_is_available()):
+                if (utime.ticks_ms() - last_poll) < 50:
+                    last_poll = last_poll - 100
+                    # self.trace("g")
+                    gc.collect()
+                
             await uasyncio.sleep_ms(0) 
                     
                 
