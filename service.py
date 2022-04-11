@@ -81,10 +81,8 @@ class Service:
     # and process_ir_input(xmit) methods.
     async def run(self):
         while True:
-            
             xmit = await self.await_ir_input()
             await self.process_ir_input(xmit)
-            
             await uasyncio.sleep_ms(0)
             
     ##  send message to another service
