@@ -38,6 +38,7 @@ class Service:
     # Name of some services
     CTL_SERVICE_NAME   = "controller"
     IR_REMOTE_SVC_NAME = "ir_remote"
+    MENU_SVC_NAME      = "menu"
     
     # Messages sent by controller to other services
     CTL_GAIN_FOCUS_MSG = "gain focus"

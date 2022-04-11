@@ -14,6 +14,7 @@
 """
 
 from service import Service
+from xmit_message import XmitMsg
 import queue
 import uasyncio
 
@@ -83,21 +84,41 @@ class ModuleService(Service):
             
         return xmit_passed
     
+    # This run passes any services and menu items that need to be added
+    # to the main Controller and Menu services.
     
-    # This run() method does not do anything.
+    
+    # After that run() method does not do anything.
     # Input queue messages sent to the controller are intercepted by the
     # poll_output_queue() method and passed directly to the i2c_svc.
-    # Therefore, the run immediately exits.
+    # Does check the input queue every few seconds just in case
+
     async def run(self):
         
         q_input = self.get_input_queue()
         
+        # wait a few seconds to give Controller time to start up
+        # no need to wait? is just placed on q out
+        # await uasyncio.sleep_ms(3000)
+        
+        # send list of services to add to Controller services dictionary
+        if "external_services" in self.svc_parms:
+            d = {"external_services" : self.svc_parms["external_services"]}
+            xmit = XmitMsg(self.name,self.CTL_SERVICE_NAME, d)
+            await self.put_to_output_q(xmit)            
+            
+        # send list of items to add to Menu menu list
+        if "add_controller_menu" in self.svc_parms:
+            d = {"add_controller_menu" : self.svc_parms["add_controller_menu"]}
+            xmit = XmitMsg(self.name,self.MENU_SVC_NAME, d)
+            await self.put_to_output_q(xmit)           
+        
         # just present during initial testing
-        # eventually remove this loop
+        # eventually remove this loop?
         while True:
             # print("r",end="")
             # make sure no messages in my input queue
-            await uasyncio.sleep_ms(1000) 
+            await uasyncio.sleep_ms(3000) 
             if not q_input.empty():
                 print("found message in Controller input q")
 

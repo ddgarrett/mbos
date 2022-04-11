@@ -55,10 +55,25 @@ class ModuleService(Service):
         while True:
             while not q_in.empty():
                 xmit = await q_in.get()
-                await self.h.process_xmit(xmit, q_out)
+                
+                msg = xmit.get_msg()
+                if isinstance(msg,str):
+                    await self.h.process_xmit(xmit, q_out)
+                elif (isinstance(msg,dict)
+                    and "add_controller_menu" in msg):
+                    await self.append_menu(msg["add_controller_menu"])
                 
             await uasyncio.sleep_ms(0)
 
+    
+    # append items on a list to my internal list of menu items
+    async def append_menu(self,menu_list):
+        # wait a second for things to start up
+        await uasyncio.sleep_ms(1000)
+        
+        for item in menu_list:
+            self.menu.append(item)
+        
     # handle key code xmit from IR input device
     async def handle_ir_key_xmit(self,xmit):
         """

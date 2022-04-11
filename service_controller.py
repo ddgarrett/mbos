@@ -20,6 +20,7 @@ from service import Service
 from xmit_message import XmitMsg
 import queue
 import uasyncio
+import gc
 # import xmit_ir_remote
 
 # All services classes are named ModuleService
@@ -31,6 +32,7 @@ class ModuleService(Service):
         self.focus_queue = []
         
         self.ir_remote = self.get_parm("ir_remote",None)
+        self.svc_lookup = None
 
     # Check output queue for each service.
     # If there is an output queue record, pass it to the appropriate input queue.
@@ -39,11 +41,14 @@ class ModuleService(Service):
     # Value is the service object.
     async def poll_output_queues(self, svc_lookup, log_xmit):
         
+        # below used by self.run() to add external services
+        self.svc_lookup = svc_lookup
+        
         xmit_passed = False
         
         # check each service output queue to see if a message was sent
         # if it was, pass it to the input queue for the "to" service
-        for svc in svc_lookup.values():
+        for svc in self.svc_lookup.values():
             q_svc_output = svc.get_output_queue()
             
             if not q_svc_output.empty():
@@ -57,8 +62,8 @@ class ModuleService(Service):
                     xmit.set_to(self.has_focus_svc)
                     to = self.has_focus_svc
                     
-                if to in svc_lookup:
-                    q_svc_input = svc_lookup[to].get_input_queue()
+                if to in self.svc_lookup:
+                    q_svc_input = self.svc_lookup [to].get_input_queue()
 
                     # avoid logging my sending a message to log
                     # if to != "log":
@@ -98,13 +103,41 @@ class ModuleService(Service):
             if not q_input.empty():
                 xmit = await q_input.get()
                 msg = xmit.get_msg()
-                fr = xmit.get_from()
-                await self.process_msg(fr, msg)
+                
+                if isinstance(msg,str):
+                    fr = xmit.get_from()
+                    await self.process_msg(fr, msg)
+                elif (isinstance(msg,dict)
+                    and "external_services" in msg):
+                    await self.insert_ext_svc(msg["external_services"])
 
             # give co-processes a chance to run
             await uasyncio.sleep_ms(0)
             
-    
+    async def insert_ext_svc(self, svc_parm_list):
+        # wait for self.poll_output_queues(...) to set self.svc_lookup
+        while self.svc_lookup == None:
+            print("w",end="")
+            await uasyncio.sleep_ms(333)
+            
+        print("have self.svc_lookup")
+        
+        # svc_lookup = self.svc_lookup
+        defaults = self.svc_parms["defaults"]
+        
+        # import the modules for services
+        for svc_parms in svc_parm_list:
+            svc_parms["defaults"] = defaults  # every service has access to defaults
+            module = __import__(svc_parms['module'])
+            self.svc_lookup[svc_parms['name']] = module.ModuleService(svc_parms)
+
+        # start the services
+        for key, svc in self.svc_lookup.items():
+            uasyncio.create_task(svc.run())
+        
+        # clean up now?
+        # gc.collect()
+        
     async def process_msg(self, fr, msg):
         if msg == self.CTL_PUSH_FOCUS_MSG:
             self.focus_queue.append(self.has_focus_svc)
