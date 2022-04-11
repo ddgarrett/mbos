@@ -54,7 +54,7 @@ class ModuleService(Service):
         # place self.controller in default parms so other
         # services can access stats
         defaults = self.svc_parms["defaults"]
-        defaults["i2c_controller"] = self.controller
+        defaults["i2c_interface"] = self.controller
         
         
 

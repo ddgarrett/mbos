@@ -58,6 +58,8 @@ class I2CResponder(I2CResponderBase):
         self.q_in = queue.Queue(q_in_size)
         self.q_out = queue.Queue(q_out_size)
         
+        self.send_cnt   = 0
+        self.rcv_cnt    = 0
         self.resend_cnt = 0
         self.failed_cnt = 0
         
@@ -139,6 +141,8 @@ class I2CResponder(I2CResponderBase):
         
         if msg_len == 0:
             return ""
+        
+        self.rcv_cnt = self.rcv_cnt + 1
         
         if msg_len > len(self.buff):
             msg_len = len(self.buff)
@@ -259,6 +263,9 @@ class I2CResponder(I2CResponderBase):
         # send length of message
         # UTF8 may have multibyte characters
         buff = bytearray(msg.encode('utf8'))
+        
+        if len(buff) > 0:
+            self.send_cnt = self.send_cnt + 1 
         
         await self.snd_msg_length(len(buff))
         if self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_CANCEL:

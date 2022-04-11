@@ -23,7 +23,12 @@ import gc
 class ModuleService(Service):
 
     def __init__(self, svc_parms):
-        super().__init__(svc_parms)     
+        super().__init__(svc_parms)
+        
+        # place self.i2c in default parms so other
+        # services can access stats
+        defaults = self.svc_parms["defaults"]
+        defaults["i2c_interface"] = self.get_i2c()
 
     async def run(self):
         q_in  = self.input_queue
