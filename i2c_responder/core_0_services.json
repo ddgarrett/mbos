@@ -30,13 +30,15 @@
     },
 
 "services": [
-    {"name":"0x41_log",     "module":"service_print",      "q_in_size":1000,  "print_log":1 },
+    {"name":"0x41_log",      "module":"service_print",      "q_in_size":1000,  "print_log":1 },
         
-    {"name":"0x41_mem_use", "module":"service_mem_use" },
+    {"name":"0x41_mem_use",  "module":"service_mem_use" },
     
-    {"name":"i2c_svc",      "module":"svc_i2c_responder",  "q_in_size":1000,  "print_log":1 },
-        
-    {"name":"0x41_ctrl",    "module":"service_responder",  "q_out_size":50, "i2c_svc":"i2c_svc" }    
+    {"name":"i2c_svc",       "module":"svc_i2c_responder",  "q_in_size":1000,  "print_log":1 },
+    
+    {"name":"0x41_test_i2c", "module":"svc_test_i2c",       "send_to":"log" },
+ 
+    {"name":"0x41_ctrl",     "module":"service_responder",  "q_out_size":50, "i2c_svc":"i2c_svc" }    
     
 
   ],
