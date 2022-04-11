@@ -20,9 +20,10 @@ class ModuleService(Service):
         await self.show_mem_use()
 
     async def show_mem_use(self):
-        msg = xmit_lcd.XmitLcd(fr=self.name)
-        msg.clear_screen().set_msg("⏶ " + self.df() + "\n⏷ " + self.free())
-        await self.put_to_output_q(msg)    
+        xmit = xmit_lcd.XmitLcd(fr=self.name)
+        xmit.clear_screen().set_msg("⏶ " + self.df() + "\n⏷ " + self.free())
+        xmit.set_cursor(0,3).set_msg(self.name)
+        await self.put_to_output_q(xmit)    
 
     # disk free space
     def df(self):
@@ -41,4 +42,5 @@ class ModuleService(Service):
         T = F+A
         P = '{0:.0f}%'.format(F/T*100)
         return ('MFr {0:,} {1}'.format(F,P))
+
 
