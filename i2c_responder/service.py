@@ -81,10 +81,8 @@ class Service:
     # and process_ir_input(xmit) methods.
     async def run(self):
         while True:
-            
             xmit = await self.await_ir_input()
             await self.process_ir_input(xmit)
-            
             await uasyncio.sleep_ms(0)
             
     ##  send message to another service
@@ -201,6 +199,16 @@ class Service:
     # gain_focus_func does not refresh the display.
     # Set control_keys=None to disable navigation away from the current display. 
     #
+    # WARNING: your gain_focus() method should NOT call another method which
+    # starts an endless loop that then calls await_ir_input(). This is because
+    # await_ir_input() may call the gain_focus() method again before returning,
+    # resulting in unintended recursive calls to gain_focus().
+    #
+    # Instead, override gain_focus() to initialize the display and
+    # override process_ir_input() to process the IR Input, update display, etc.
+    # The default run() method will call await_ir_input() which will then call your
+    # gain_focus(). The default run() will then call your process_ir_input() methods as needed
+    #
     async def await_ir_input(self,
                              accept_keys=None,
                              control_keys=utf8_char.KEYS_NAVIGATE,
@@ -262,4 +270,3 @@ class Service:
             return defaults[parm_name]
         
         return parm_default
-
