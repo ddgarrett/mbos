@@ -3,6 +3,8 @@ import utime
 import math
 from ws2812 import WS2812
 
+import hsv_to_rgb
+
 ws = WS2812(machine.Pin(0),8)
 ws[0] = [64,154,227]
 ws[1] = [128,0,128]
@@ -16,6 +18,31 @@ ws.write()
 
 utime.sleep(2)
 
+# while True:
+n = 10
+m = 30
+for i in range(n):
+    ip = i/n
+    for j in range(m):
+        r,g,b = hsv_to_rgb.cnv(ip,1,j/m)
+        for j in range(8):
+            ws[j] = [r,g,b]
+            ws.write()
+        utime.sleep(.1)
+        print(i,ip,j/m)
+        
+    ip = abs(i/n-0.5)
+    for j in range(int(m/2)):
+        v = abs(j)/m * 2
+        r,g,b = hsv_to_rgb.cnv(ip,1,v)
+        for j in range(8):
+            ws[j] = [r,g,b]
+            ws.write()
+        utime.sleep(.1)      
+        print(i,ip,v)
+
+
+"""
 n = 256  # number of steps
 TWO_PI = 3.14159*2
 
@@ -32,7 +59,7 @@ for i in range(n):
     ws.write()
     print("{} {} {} {}     ".format(i,r,g,b),end="\r")
     utime.sleep(.1)
-
+"""
 
 """
 n = [0,32,64,96,128,159,191,223,255]
