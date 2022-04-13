@@ -61,42 +61,13 @@ class ModuleService(Service):
                     await self.h.process_xmit(xmit, q_out)
                 elif (isinstance(msg,dict)
                     and "add_controller_menu" in msg):
-                    await self.append_menu(msg["add_controller_menu"])
+                    await self.menu.append(msg["add_controller_menu"])
                 
-            await uasyncio.sleep_ms(0)
+            await uasyncio.sleep_ms(500)
 
     
-    # append items on a list to my internal list of menu items
-    async def append_menu(self,menu_list):
-        # wait a second for things to start up
-        await uasyncio.sleep_ms(1000)
-        
-        for item in menu_list:
-            self.menu.append(item)
-        
     # handle key code xmit from IR input device
-    async def handle_ir_key_xmit(self,xmit):
-        """
-        if xmit.get_msg() == utf8_char.KEY_POWER_OFF:
-            if not self.display_on:
-                await self.init_lcd()
-                self.display_on = True
-            else:
-                await self.turn_off_lcd()
-                self.display_on = False
-                
-            return True
-        """
-        
-        ##### menu actions go here
-        """
-        if xmit.get_msg() == utf8_char.KEY_PLAY_PAUSE_TOGGLE \
-           and self.has_focus:
-            self.display_on = True
-            await self.display_menu()
-            return True
-        """
-        
+    async def handle_ir_key_xmit(self,xmit):        
         if xmit.get_msg() == utf8_char.KEY_INCREASE:
             self.current_svc = self.current_svc + 1
             if self.current_svc >= len(self.menu):
@@ -129,10 +100,6 @@ class ModuleService(Service):
         # IF we do, an infinite loop will result
         return True
     
-    # display the services menu
-    async def display_menu(self):            
-        await self.update_lcd("press up or down\n arrows")
-                
     async def handle_controller_xmit(self, xmit_msg):
         # Only expect lose or gain focus messages from controller
         if xmit_msg.get_msg() == self.CTL_GAIN_FOCUS_MSG:
@@ -155,11 +122,6 @@ class ModuleService(Service):
             
         return False
 
-    async def turn_off_lcd(self):
-        msg = xmit_lcd.XmitLcd(fr=self.name)
-        msg.set_backlight(0)
-        await self.put_to_output_q(msg)
-        
     # set LCD temp/humidity labels
     async def init_lcd(self):
         msg = "⏶ Up/Down Arrow\n⏷ to Select Func"
@@ -167,11 +129,7 @@ class ModuleService(Service):
         xmit.clear_screen().set_msg(msg)
         await self.put_to_output_q(xmit)
         
-    # update LCD with msg
-    async def update_lcd(self,msg):
-        xmit = xmit_lcd.XmitLcd(fr=self.name)
-        xmit.clear_screen().set_msg(msg)
-        await self.put_to_output_q(xmit)
+
 
 
     
