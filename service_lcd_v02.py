@@ -73,15 +73,6 @@ class ModuleService(Service):
         self.blink_task     = None
         self.blink_interval = 0
         
-        # Add any custom characters
-        # Any custom characters must have a byte array
-        # defined in utf8_char.py in the dictionary CUSTOM_CHARACTERS
-        custom_char = self.get_parm("custom_char","")
-        for char in custom_char:
-            if char in utf8_char.CUSTOM_CHARACTERS:
-                b_array = utf8_char.CUSTOM_CHARACTERS[char]
-                self.lcd.def_special_char(char,b_array)
-
         # dictionary to execute commands
         self.cmd_lookup = {
             xmit_lcd.CMD_CLEAR_SCREEN : self.clear_screen,
@@ -112,6 +103,16 @@ class ModuleService(Service):
             await uasyncio.sleep_ms(500)
         
     async def run(self):
+        # Add any custom characters
+        # Any custom characters must have a byte array
+        # defined in utf8_char.py in the dictionary CUSTOM_CHARACTERS
+        custom_char = self.get_parm("custom_char","")
+        for char in custom_char:
+            if char in utf8_char.CUSTOM_CHARACTERS:
+                b_array = utf8_char.CUSTOM_CHARACTERS[char]
+                self.lcd.def_special_char(char,b_array)
+
+
         q = self.get_input_queue()
         
         # Start the blink coroutine.
@@ -119,9 +120,9 @@ class ModuleService(Service):
         self.blink_task = uasyncio.create_task(self.blink_lcd())
         
         while True:
-            if not q.empty():
-                msg = await q.get()
-                self.process_msg(msg)
+            # if not q.empty():
+            msg = await q.get()
+            self.process_msg(msg)
 
             # give co-processes a chance to run
             await uasyncio.sleep_ms(0)

@@ -36,20 +36,20 @@ class ModuleService(Service):
         q_out = self.output_queue
         
         while True:
-            if not q_in.empty():
-                xmit = await q_in.get()
-                
-                # await self.log_msg("stub fwd: " + xmit.dumps())
-                
-                xmit = xmit.wrapXmit(fr=self.name, to="i2c_svc")
-                msg = xmit.get_msg()
-                new_msg = [self.i2c_addr, msg]
-                xmit.msg = new_msg
-                
-                await q_out.put(xmit)
+            # if not q_in.empty():
+            xmit = await q_in.get()
+            
+            # await self.log_msg("stub fwd: " + xmit.dumps())
+            
+            xmit = xmit.wrapXmit(fr=self.name, to="i2c_svc")
+            msg = xmit.get_msg()
+            new_msg = [self.i2c_addr, msg]
+            xmit.msg = new_msg
+            
+            await q_out.put(xmit)
                 
             # give co-processes a chance to run
-            await uasyncio.sleep_ms(0)
+            # await uasyncio.sleep_ms(0)
                             
 
     

@@ -42,11 +42,11 @@ class ModuleService(Service):
         q_out = self.get_output_queue()
         
         while True:
-            while not q_in.empty():
-                xmit = await q_in.get()
-                await self.h.process_xmit(xmit, q_out)
+            # while not q_in.empty():
+            xmit = await q_in.get()
+            await self.h.process_xmit(xmit, q_out)
                 
-            await uasyncio.sleep_ms(0)
+            # await uasyncio.sleep_ms(0)
 
     # handle key code xmit from IR input device
 
