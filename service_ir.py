@@ -63,7 +63,7 @@ class ModuleService(Service):
                 xmit_msg = await q_input.get()
                 
             if (self.data != None
-            and utime.ticks_diff(utime.ticks_ms(), ts) > 100):
+            and utime.ticks_diff(utime.ticks_ms(), ts) > 10):
                 ts = utime.ticks_ms()
                 await self.send_key(self.data)
                 self.data = None
