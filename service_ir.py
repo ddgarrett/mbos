@@ -24,7 +24,7 @@ def sensor_callback(data, addr, ctrl):
         pass
         #print('Repeat code.')
     else:
-        print('********** Data {:02x} Addr {:04x} Ctrl {:02x}'.format(data, addr, ctrl))
+        # print('********** Data {:02x} Addr {:04x} Ctrl {:02x}'.format(data, addr, ctrl))
         ir_obj.data = data
             
 # All services classes are named ModuleService
