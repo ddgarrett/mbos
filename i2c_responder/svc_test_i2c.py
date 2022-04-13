@@ -22,6 +22,7 @@ class ModuleService(Service):
         await super().gain_focus()
         await self.init_display()
         
+    # Initialize the LCD display
     async def init_display(self):
         controller = self.get_parm("i2c_interface",None)
         
@@ -39,6 +40,7 @@ class ModuleService(Service):
         await self.put_to_output_q(xmit)
 
 
+    # perform action after IR input 
     async def process_ir_input(self,xmit):
         
         controller = self.get_parm("i2c_interface",None)
