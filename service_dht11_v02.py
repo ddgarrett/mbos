@@ -19,6 +19,8 @@ import utime
 from dht11 import DHT11, InvalidChecksum
 from machine import Pin
 
+import gc
+
 # All services classes are named ModuleService
 class ModuleService(Service):
 
@@ -66,8 +68,11 @@ class ModuleService(Service):
             if (ticks_now - ticks_last_update) > 2000:
                 ticks_last_update = ticks_now
                 await self.update_lcd()
+            else:
+                # gc.collect()
+                pass
                 
-            await uasyncio.sleep_ms(10)            
+            await uasyncio.sleep_ms(333)            
 
     # update LCD temp/humidity values
     async def update_lcd(self):
@@ -78,9 +83,12 @@ class ModuleService(Service):
         try: 
             temp = self.sensor.temperature * 1.8 + 32
             humidity = self.sensor.humidity
+            # print("update okay")
         except Exception as e:
-            update_ok = False
+            # update_ok = False
             # await self.log_msg(e)
+            # print(e)
+            pass
         
         if update_ok:
             # adjustments based on comparison to commercial product

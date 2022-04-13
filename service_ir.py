@@ -24,7 +24,7 @@ def sensor_callback(data, addr, ctrl):
         pass
         #print('Repeat code.')
     else:
-        # print('Data {:02x} Addr {:04x} Ctrl {:02x}'.format(data, addr, ctrl))
+        print('********** Data {:02x} Addr {:04x} Ctrl {:02x}'.format(data, addr, ctrl))
         ir_obj.data = data
             
 # All services classes are named ModuleService
@@ -63,12 +63,12 @@ class ModuleService(Service):
                 xmit_msg = await q_input.get()
                 
             if (self.data != None
-            and utime.ticks_diff(utime.ticks_ms(), ts) > 250):
+            and utime.ticks_diff(utime.ticks_ms(), ts) > 100):
                 ts = utime.ticks_ms()
                 await self.send_key(self.data)
                 self.data = None
                 
-            await uasyncio.sleep_ms(0)
+            await uasyncio.sleep_ms(10)
              
     # send a key to the focus service
     async def send_key(self, key):
