@@ -163,11 +163,12 @@ class Service:
         q_in = self.get_input_queue()
                 
         while True:
-            while not q_in.empty():
-                xmit = await q_in.get()
-                if self.gain_focus_msg(xmit):
-                    self.has_focus = True
-                    return
+            # while not q_in.empty():
+            # wait until there is input
+            xmit = await q_in.get()
+            if self.gain_focus_msg(xmit):
+                self.has_focus = True
+                return
             
             await uasyncio.sleep_ms(0)
     
@@ -228,24 +229,24 @@ class Service:
         # await self.await_gain_focus()
         
         while True:
-            while not q_in.empty():
-                xmit = await q_in.get()
-                if self.lose_focus_msg(xmit):
-                    await lose_focus_func()
-                    await self.await_gain_focus()
-                    await gain_focus_func()
-                    
-                elif self.gain_focus_msg(xmit):
-                    await gain_focus_func()
-                    
-                elif xmit.get_from() == self.IR_REMOTE_SVC_NAME:
+            # while not q_in.empty():
+            xmit = await q_in.get()
+            if self.lose_focus_msg(xmit):
+                await lose_focus_func()
+                await self.await_gain_focus()
+                await gain_focus_func()
+                
+            elif self.gain_focus_msg(xmit):
+                await gain_focus_func()
+                
+            elif xmit.get_from() == self.IR_REMOTE_SVC_NAME:
 
-                    # retransmit control keys to controller
-                    if control_keys != None and xmit.get_msg() in control_keys:
-                        await self.rexmit(xmit)
-                        
-                    elif accept_keys == None or xmit.get_msg() in accept_keys:
-                        return xmit
+                # retransmit control keys to controller
+                if control_keys != None and xmit.get_msg() in control_keys:
+                    await self.rexmit(xmit)
+                    
+                elif accept_keys == None or xmit.get_msg() in accept_keys:
+                    return xmit
                     
             await uasyncio.sleep_ms(0)
         

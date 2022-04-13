@@ -100,16 +100,17 @@ class ModuleService(Service):
         q_input = self.get_input_queue()
         
         while True:
-            if not q_input.empty():
-                xmit = await q_input.get()
-                msg = xmit.get_msg()
-                
-                if isinstance(msg,str):
-                    fr = xmit.get_from()
-                    await self.process_msg(fr, msg)
-                elif (isinstance(msg,dict)
-                    and "external_services" in msg):
-                    await self.insert_ext_svc(msg["external_services"])
+            #if not q_input.empty():
+            # wait until there is input
+            xmit = await q_input.get()
+            msg = xmit.get_msg()
+            
+            if isinstance(msg,str):
+                fr = xmit.get_from()
+                await self.process_msg(fr, msg)
+            elif (isinstance(msg,dict)
+                and "external_services" in msg):
+                await self.insert_ext_svc(msg["external_services"])
 
             # give co-processes a chance to run
             await uasyncio.sleep_ms(0)

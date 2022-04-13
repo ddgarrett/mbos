@@ -53,15 +53,16 @@ class ModuleService(Service):
         q_out = self.get_output_queue()
         
         while True:
-            while not q_in.empty():
-                xmit = await q_in.get()
-                
-                msg = xmit.get_msg()
-                if isinstance(msg,str):
-                    await self.h.process_xmit(xmit, q_out)
-                elif (isinstance(msg,dict)
-                    and "add_controller_menu" in msg):
-                    await self.menu.append(msg["add_controller_menu"])
+            # while not q_in.empty():
+            # wait until there is input
+            xmit = await q_in.get()
+            
+            msg = xmit.get_msg()
+            if isinstance(msg,str):
+                await self.h.process_xmit(xmit, q_out)
+            elif (isinstance(msg,dict)
+                and "add_controller_menu" in msg):
+                await self.menu.append(msg["add_controller_menu"])
                 
             await uasyncio.sleep_ms(500)
 
