@@ -38,7 +38,7 @@
                  "test_i2c", "0x41_test_i2c"]
         },
 
-    {"name":"lcd",           "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷" },
+    {"name":"lcd",           "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷⌛" },
         
     {"name":"temp_humid",    "module":"service_dht11_v02" },
         
@@ -60,6 +60,7 @@
         
     {"name":"ir_remote",     "module":"service_ir",     "key_map":"ir_mapping_koobook.json" },
     {"name":"mem_use",       "module":"service_mem_use"   }
+    
  ],
     
 "currently_unused_services": [

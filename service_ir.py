@@ -77,6 +77,12 @@ class ModuleService(Service):
         key_str = "{:02x}".format(key)
         # print("new service_ir: "+key_str)
         if key_str in self.key_mapping:
+            # show hourglass to provide user feedback - character received
+            xmit = xmit_lcd.XmitLcd(fr=self.name)
+            xmit.dsp_hg()
+            await self.put_to_output_q(xmit)           
+            
+            # now send the character to "focus" service
             value = self.key_mapping[key_str]
             await self.send_msg("focus", value)
         else:

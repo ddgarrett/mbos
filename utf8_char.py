@@ -29,6 +29,8 @@ KEY_VOLUME_DOWN       = "🔉"
 
 KEY_DEGREES_SYMBOL    = "°"
 
+SYM_HOUR_GLASS            = "⌛"
+
 
 # Keys that scroll up and down between apps
 KEYS_NAVIGATE = [KEY_INCREASE, KEY_DECREASE]
@@ -105,6 +107,18 @@ CUSTOM_CHARACTERS = {
         0b00000,
         0b00000,
         0b00000 
+    ],
+    
+    SYM_HOUR_GLASS :[
+        
+        0b11111,
+        0b11111,
+        0b01110,
+        0b00100,
+        0b00100,
+        0b01010,
+        0b10001,
+        0b11111
     ]
 
 }

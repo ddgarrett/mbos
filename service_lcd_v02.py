@@ -55,8 +55,8 @@ class ModuleService(Service):
         """
         
         i2c_addr       = int(self.get_parm("i2c_addr", "0x27"))
-        lcd_row_cnt    = int(self.get_parm("lcd_row_cnt", "2"))
-        lcd_col_cnt    = int(self.get_parm("lcd_col_cnt", "16"))
+        self.lcd_row_cnt    = int(self.get_parm("lcd_row_cnt", "2"))
+        self.lcd_col_cnt    = int(self.get_parm("lcd_col_cnt", "16"))
         
         
         
@@ -67,11 +67,13 @@ class ModuleService(Service):
                   scl=Pin(i2c_scl_pin), freq=i2c_freq)
         """
 
-        self.lcd = I2cLcd(i2c, i2c_addr, lcd_row_cnt, lcd_col_cnt)
+        self.lcd = I2cLcd(i2c, i2c_addr, self.lcd_row_cnt, self.lcd_col_cnt)
         
         self.backlight_on   = True
         self.blink_task     = None
         self.blink_interval = 0
+        
+        self.hg_task_cnt    = 0
         
         # dictionary to execute commands
         self.cmd_lookup = {
@@ -156,6 +158,8 @@ class ModuleService(Service):
                     self.set_backlight(command[key])
                 elif key == 'blink_backlight':
                     self.blink_interval = command[key]
+                elif key == xmit_lcd.CMD_DSP_HG:
+                    self.dsp_hg(command[key])
                 else:
                     # log error in dictionary command
                     pass
@@ -191,6 +195,30 @@ class ModuleService(Service):
         self.lcd.blink_cursor_off()
         self.lcd.hide_cursor()
         self.blink_interval = 0
+        
+        
+    # display the hourglass symbole for given period of time
+    def dsp_hg(self,time):
+        self.hg_task_cnt += 1
+        self.hg_task = uasyncio.create_task(self.dsp_hg_tsk(time))
+        
+    async def dsp_hg_tsk(self,time):
+        row = self.lcd_row_cnt-1
+        col = self.lcd_col_cnt-1
+        
+        self.set_cursor([col,row])
+        self.lcd.putstr(utf8_char.SYM_HOUR_GLASS)
+        await uasyncio.sleep_ms(int(time* 1000))
+        
+        # ensure no other hg tasks are running
+        self.hg_task_cnt -= 1
+        if self.hg_task_cnt == 0:
+            self.set_cursor([col,row])
+            self.lcd.putstr(" ")
+        
+
+        
+        
             
                 
         
