@@ -85,7 +85,7 @@ class ModuleService(Service):
             humidity = self.sensor.humidity
             # print("update okay")
         except Exception as e:
-            # update_ok = False
+            update_ok = False
             # await self.log_msg(e)
             # print(e)
             pass
