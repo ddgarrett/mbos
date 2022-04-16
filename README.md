@@ -78,6 +78,37 @@ This is an experimental prototype created to explore the possibilities of runnin
 
 3. `controller.py` executes the sames steps on the Controller as on the Responder. For the Controller  the`ctrl_svc` will point to a service defined by the python `service_controller.py` module instead of the `service_responder.py` module used on the Responder.
 
+##### Example Controller Services JSON Parm
+
+```json
+"services": [
+    {"name":"controller",    "module":"service_controller",   "q_out_size":10,
+        "startup_focus":"menu",  "menu":"menu" },
+         
+    {"name":"menu",          "module":"service_menu",     "initial_app":"temp_humid",  
+        "menu":[ "temp_humid", "gyro", "mem_use", "clock"]
+        },
+
+    {"name":"lcd",           "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷⌛" },
+        
+    {"name":"temp_humid",    "module":"service_dht11_v02" },
+        
+    {"name":"i2c_svc",       "module":"service_i2c_controller", "q_in_size":50, "q_out_size":50,
+     "ignore_addr":[104], "i2c_parm":"i2c_1" },
+    
+    
+    {"name":"gyro",          "module":"svc_gyro_v01", "adj_x":-4, "i2c_parm":"i2c_1"},
+        
+    {"name":"log",           "module":"service_print",  "q_in_size":100,  "print_log":1,
+      "todo": "make a log to disk version, or have that as an option?" },
+        
+    {"name":"ir_remote",     "module":"service_ir",     "key_map":"ir_mapping_koobook.json" },
+    {"name":"mem_use",       "module":"service_mem_use"   },
+    {"name":"clock",         "module":"service_clock"   }
+    
+ ],
+
+```
 
 #### Interservice Communication
 
@@ -112,3 +143,20 @@ This is an experimental prototype created to explore the possibilities of runnin
     7. After starting the remote services for the Responder `pnp_svc`, the `controller` service on the Controller sends a second xmit to the `pnp_svc` with the message `ext_menu`. This tells the `pnp_svc` to respond to the Controller `menu` service with a list of service names to be added to the Controller menu.
     8. The Responder `pnp_svc` service responds with the value of the services `ext_menu` list, which is sent to the `menu` service on the Controller.
     9. The Controller `menu` service then appends these to the Controller menu, the list of services which are scrolled through via the the `⏶` and `⏷` keys.
+
+##### Example Plug and Play JSON Parameter
+
+```json
+    {"name":"pnp_svc",       "module":"svc_pnp",            "q_out_size":50, "i2c_svc":"i2c_svc",
+     "ext_svc":[
+            {"name":"0x41_log",      "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"0x41_mem_use",  "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"0x41_test_i2c", "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"test_i2c_0x41", "module":"svc_test_i2c",   "send_to":"0x41_log" }
+
+        ],
+        
+      "ext_menu":["0x41_mem_use","test_i2c_0x41", "0x41_test_i2c" ]
+      
+    }
+```
