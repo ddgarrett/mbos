@@ -189,7 +189,7 @@ Controller pauses roughly 100ms between iterations of sending any messages and p
 
 Controller also does an `await uasyncio.sleep_ms(0)` call between sending messages to Responders, polling Responders and receiving a message from a Responder.
 
-During startup, the `controller.py` module will start a responder task.
+On Responders, during startup, the `controller.py` module will start a responder task if there is a responder address which indicates that it is starting a Responder and not a Controller.
 
 ```python
     resp_addr = get_parm(parms,"i2c_responder_addr",None)
@@ -202,5 +202,5 @@ During startup, the `controller.py` module will start a responder task.
         uasyncio.create_task(i2cr.poll_snd_rcv())
 ```
 
-The `I2CRepsonder.create_task()` method then continually checks for the Controller read and write requests, performing a `await uasyncio.sleep_ms(0)` only if there aren't any Controller requests. In other words, it should respond almost immediately when the Controller tries to send or receive data. This seemed to reduce the 
+The `I2CRepsonder.poll_snd_rcv()` method then continually checks for Controller read and write requests, performing a `await uasyncio.sleep_ms(0)` only if there aren't any Controller requests. In other words, it should respond almost immediately when the Controller tries to send or receive data. This seemed to reduce the 
 instance of transmit errors.
