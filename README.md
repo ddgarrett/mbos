@@ -100,11 +100,13 @@ This is an experimental prototype created to explore the possibilities of runnin
     - if the parameters for an I2C bus specifies a value for `i2c_responder_addr`, the `controller.py` assumes the I2C bus is for an I2C Responder and creates a new instance of `I2CResponder` as defined in `i2c_responder.py`. 
     - Otherwise, `controller.py` will create a new I2C instance from the standard `machine.I2C` class
 
-- The Controller `services` JSON parameters defines a service named `i2c_svc` started from the python class `service_i2c_controller.ModuleService`. When the `controller.py` module starts the `run()` method for the `i2c_svc` service it will
+- The Controller `services` JSON parameters defines a service named `i2c_svc` started from the python class `service_i2c_controller.ModuleService`. The `run()` method for the `i2c_svc` service will
     1. scan the I2C bus specified by the `i2c_parm` service parameter, which should be `i2c` or `i2c_1`, to obtain the list of Responders. 
     2. The service parameter `ignore_addr` must contain a list of I2C addresses on that bus which are **not** MBOS Responders. If a non-Responder I2C bus member is not specified this will hang the Controller.
     3. The `i2c_svc` will then transmit a message to each Responder, which will be directed at the Responder `pnp_svc`, with the message `ext_svc`.
-    4. The Responder `pnp_svc` will then respond to the `ext_svc` message with a list of external services that should be added to the list of services on the Controller. 
+
+- The loading of external services then continues as follows:
+    1. The Responder `pnp_svc` will then respond to the `ext_svc` message with a list of external services that should be added to the list of services on the Controller. 
     5. The response message is sent to the xmit `from` service, which will be the Controller service named `controller` (`service_controller.py` based service)
     6. The Controller `controller` service then adds the services to the list of Controller services after creating a new instance of the service and starting its `run()` method. This means that the source for the python module must exist on the Controller. **TODO**: limit which python modules can be started this way? Currently only `svc_i2c_stub.py` and `svc_test_i2c.py` modules are used to start remote services on the Controller. The `svc_i2c_stub.py` simply forwards a message to the specified Responder based on the Responder address.
     7. After starting the remote services for the Responder `pnp_svc`, the `controller` service on the Controller sends a second xmit to the `pnp_svc` with the message `ext_menu`. This tells the `pnp_svc` to respond to the Controller `menu` service with a list of service names to be added to the Controller menu.
