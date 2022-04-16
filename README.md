@@ -28,6 +28,7 @@ The Raspberry Pi Pico probably deserves an OS much better than this, but hey, it
 
 2. On the secondary (Responder) pico, download all of the files in `i2c_responder`.
 
+3. Ignore the files in the `i2c_responder_v004.ino` folder. They were originally used for some testing with the Arduino Uno, but are out of date.
 
 ### Wiring
 
