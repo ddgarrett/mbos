@@ -33,7 +33,7 @@ class ModuleService(Service):
             if msg == "ext_svc":
                 if "ext_svc" in self.svc_parms:
                     d = {"ext_svc" : self.svc_parms["ext_svc"],
-                         "i2c_addr": self.get_parm("ic2_responder_addr",None)}
+                         "i2c_addr": self.get_parm("i2c_responder_addr",None)}
                     xmit = XmitMsg(self.name,fr, d)
                     await self.put_to_output_q(xmit)
                     

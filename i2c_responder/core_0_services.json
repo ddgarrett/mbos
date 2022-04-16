@@ -23,9 +23,9 @@
     "i2c_bus"    :0,
     "i2c_sda_pin":20, 
     "i2c_scl_pin":21,
-    "ic2_freq"   :100000,
+    "i2c_freq"   :100000,
     
-    "ic2_responder_addr" : 65
+    "i2c_responder_addr" : 65
     
     },
 

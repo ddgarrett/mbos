@@ -33,7 +33,7 @@ def get_i2c(parms):
     scl  = get_parm(parms,"i2c_scl_pin",1)
     freq = get_parm(parms,"i2c_freq",100_000)
     
-    resp_addr = get_parm(parms,"ic2_responder_addr",None)
+    resp_addr = get_parm(parms,"i2c_responder_addr",None)
     
     if resp_addr != None:
         # we're an I2C Responder
