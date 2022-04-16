@@ -250,6 +250,9 @@ class I2cController:
         
         while self.buff_2[0] == _BLK_MSG_LENGTH_ACK_ERR_RESEND:
         
+            # wait to give sender time to catch up before trying to read?
+            await uasyncio.sleep_ms(1)
+            
             # read length of message
             self.i2c.readfrom_into(addr,self.buff_2)
             msg_len = int.from_bytes(self.buff_2,sys.byteorder)
@@ -264,6 +267,9 @@ class I2cController:
                 return msg_len
          
             self.resend_cnt = self.resend_cnt + 1
+            
+            # wait to give sender time to catch up before trying to read again?
+            # await uasyncio.sleep_ms(1)
             
             
         # not ack msg length okay or resend

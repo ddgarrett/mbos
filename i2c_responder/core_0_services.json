@@ -38,19 +38,32 @@
     
     {"name":"0x41_test_i2c", "module":"svc_test_i2c",       "send_to":"log" },
  
-    {"name":"0x41_ctrl",     "module":"service_responder",  "q_out_size":50, "i2c_svc":"i2c_svc" }    
+    {"name":"0x41_ctrl",     "module":"service_responder",  "q_out_size":50, "i2c_svc":"i2c_svc" },
+    
+    {"name":"pnp_svc",       "module":"svc_pnp",            "q_out_size":50, "i2c_svc":"i2c_svc",
+     "ext_svc":[
+            {"name":"0x41_log",      "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"0x41_mem_use",  "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"0x41_test_i2c", "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"test_i2c_0x41", "module":"svc_test_i2c",   "send_to":"0x41_log" }
+
+        ],
+        
+      "ext_menu":["0x41_mem_use","test_i2c_0x41", "0x41_test_i2c" ]
+      
+    }
     
 
   ],
   
  "save":[
-         "external_services":[
+         "ext_svc":[
             {"name":"0x41_log",     "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
             {"name":"0x41_mem_use", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" }
 
         ],
         
-        "add_controller_menu":["0x41_mem_use"]
+        "ext_menu":["0x41_mem_use"]
  ]
     
 

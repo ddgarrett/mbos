@@ -18,6 +18,8 @@
 
 from service import Service
 from xmit_message import XmitMsg
+from svc_i2c_stub import fwd_i2c_msg
+
 import queue
 import uasyncio
 import gc
@@ -108,20 +110,17 @@ class ModuleService(Service):
             if isinstance(msg,str):
                 fr = xmit.get_from()
                 await self.process_msg(fr, msg)
-            elif (isinstance(msg,dict)
-                and "external_services" in msg):
-                await self.insert_ext_svc(msg["external_services"])
+            elif (isinstance(msg,dict) and
+                  "ext_svc" in msg):
+                await self.insert_ext_svc(msg)
 
             # give co-processes a chance to run
             await uasyncio.sleep_ms(0)
             
-    async def insert_ext_svc(self, svc_parm_list):
-        # wait for self.poll_output_queues(...) to set self.svc_lookup
-        while self.svc_lookup == None:
-            print("w",end="")
-            await uasyncio.sleep_ms(333)
-            
-        print("have self.svc_lookup")
+    async def insert_ext_svc(self, msg):
+        
+        svc_parm_list = msg["ext_svc"]
+        i2c_addr = msg["i2c_addr"]
         
         # svc_lookup = self.svc_lookup
         defaults = self.svc_parms["defaults"]
@@ -130,14 +129,21 @@ class ModuleService(Service):
         for svc_parms in svc_parm_list:
             svc_parms["defaults"] = defaults  # every service has access to defaults
             module = __import__(svc_parms['module'])
-            self.svc_lookup[svc_parms['name']] = module.ModuleService(svc_parms)
-
-        # start the services
-        for key, svc in self.svc_lookup.items():
+            svc = module.ModuleService(svc_parms)
+            self.svc_lookup[svc_parms['name']] = svc
             uasyncio.create_task(svc.run())
+            
+            await self.log_msg("started svc {} for responder {}".format(svc_parms['name'],i2c_addr))
         
         # clean up now?
-        # gc.collect()
+        gc.collect()
+        
+        # Request sender to now send a list of any external menu items
+        # to be added to the menu list. Have them send it to the "menu" service.
+        xmit = XmitMsg(self.MENU_SVC_NAME, "pnp_svc", "ext_menu")
+        xmit = fwd_i2c_msg(self.MENU_SVC_NAME, xmit, i2c_addr)
+        # print(xmit)
+        await self.get_output_queue().put(xmit)
         
     async def process_msg(self, fr, msg):
         if msg == self.CTL_PUSH_FOCUS_MSG:

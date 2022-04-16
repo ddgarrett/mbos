@@ -39,7 +39,7 @@ async def main():
 
     # for send long data
     controller = I2cController(i2c_channel=I2C_CHANNEL,
-                              scl_pin=I2C_SCL_PIN,sda_pin=I2C_SDA_PIN, i2c_freq=100_000)
+                              scl_pin=I2C_SCL_PIN,sda_pin=I2C_SDA_PIN, i2c_freq=200_000)
 
     # i2c = controller.i2c
     
@@ -98,7 +98,7 @@ async def main():
     
     ticks_start = utime.ticks_us()
     
-    repeat_cnt = 100
+    repeat_cnt = 50
     m = 2
     
     for i in range(repeat_cnt):

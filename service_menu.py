@@ -61,8 +61,8 @@ class ModuleService(Service):
             if isinstance(msg,str):
                 await self.h.process_xmit(xmit, q_out)
             elif (isinstance(msg,dict)
-                and "add_controller_menu" in msg):
-                await self.menu.append(msg["add_controller_menu"])
+                and "ext_menu" in msg):
+                self.menu.extend(msg["ext_menu"])
                 
             await uasyncio.sleep_ms(500)
 

@@ -25,6 +25,7 @@ import queue
 import uasyncio
 from xmit_message import XmitMsg
 from i2c_controller import I2cController
+from svc_i2c_stub import fwd_i2c_msg
 
 # All services classes are named ModuleService
 class ModuleService(Service):
@@ -75,6 +76,12 @@ class ModuleService(Service):
         
         await self.log_msg("polling addresses: " + str(poll_addr))
         
+        # poll responder plug and play service
+        for addr in poll_addr:
+            xmit = XmitMsg(self.CTL_SERVICE_NAME,"pnp_svc", "ext_svc")
+            xmit = fwd_i2c_msg(self.CTL_SERVICE_NAME,xmit,addr)
+            await q_in.put(xmit)
+        
         while True:
             
             # send any queued xmit
@@ -112,7 +119,7 @@ class ModuleService(Service):
             # wait 1/3 second before polling I2C bus again
             # TODO: base wait on number of ticks since last wait?
             #  - wait for at least 333 ticks since last polling
-            await uasyncio.sleep_ms(333)
+            await uasyncio.sleep_ms(100)
                             
 
     

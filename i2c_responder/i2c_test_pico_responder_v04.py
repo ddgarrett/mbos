@@ -39,7 +39,7 @@ async def main():
     # -----------------
     i2c_responder = I2CResponder(
         RESPONDER_I2C_DEVICE_ID, sda_gpio=GPIO_RESPONDER_SDA, scl_gpio=GPIO_RESPONDER_SCL,
-        responder_address=RESPONDER_ADDRESS, trace=True
+        responder_address=RESPONDER_ADDRESS, trace=False
     )
     
     print('Testing I2CResponder v' + i2c_responder.VERSION)
@@ -61,7 +61,12 @@ async def main():
     scnt = 0
     while True:
         
-        if not q_out.empty():
+        while q_out.empty():
+            await uasyncio.sleep_ms(2000)
+        
+        await uasyncio.sleep_ms(10000)
+        
+        while not q_out.empty():
             msg = await q_out.get()
             rcnt = rcnt + 1
             

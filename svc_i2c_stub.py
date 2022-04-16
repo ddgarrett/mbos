@@ -19,6 +19,15 @@ from service import Service
 import queue
 import uasyncio
 
+# Create an xmit which will forward an xmit
+# to a given i2c_addr. 
+def fwd_i2c_msg(fr,xmit,i2c_addr):
+    xmit = xmit.wrapXmit(fr=fr, to="i2c_svc")
+    msg = xmit.get_msg()
+    new_msg = [i2c_addr, msg]
+    xmit.msg = new_msg
+    return xmit
+
 # All services classes are named ModuleService
 class ModuleService(Service):
 
@@ -41,10 +50,13 @@ class ModuleService(Service):
             
             # await self.log_msg("stub fwd: " + xmit.dumps())
             
+            """
             xmit = xmit.wrapXmit(fr=self.name, to="i2c_svc")
             msg = xmit.get_msg()
             new_msg = [self.i2c_addr, msg]
             xmit.msg = new_msg
+            """
+            xmit = fwd_i2c_msg(self.name,xmit,self.i2c_addr)
             
             await q_out.put(xmit)
                 
