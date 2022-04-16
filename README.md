@@ -144,9 +144,20 @@ This is an experimental prototype created to explore the possibilities of runnin
     8. The Responder `pnp_svc` service responds with the value of the services `ext_menu` list, which is sent to the `menu` service on the Controller.
     9. The Controller `menu` service then appends these to the Controller menu, the list of services which are scrolled through via the the `⏶` and `⏷` keys.
 
-##### Example Plug and Play JSON Parameter
+##### Example Responder JSON Services Parm with Plug and Play JSON Parms
 
 ```json
+"services": [
+    {"name":"0x41_log",      "module":"service_print",      "q_in_size":1000,  "print_log":1 },
+        
+    {"name":"0x41_mem_use",  "module":"service_mem_use" },
+    
+    {"name":"i2c_svc",       "module":"svc_i2c_responder",  "q_in_size":1000,  "print_log":1 },
+    
+    {"name":"0x41_test_i2c", "module":"svc_test_i2c",       "send_to":"log" },
+ 
+    {"name":"0x41_ctrl",     "module":"service_responder",  "q_out_size":50, "i2c_svc":"i2c_svc" },
+    
     {"name":"pnp_svc",       "module":"svc_pnp",            "q_out_size":50, "i2c_svc":"i2c_svc",
      "ext_svc":[
             {"name":"0x41_log",      "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
@@ -159,4 +170,5 @@ This is an experimental prototype created to explore the possibilities of runnin
       "ext_menu":["0x41_mem_use","test_i2c_0x41", "0x41_test_i2c" ]
       
     }
+  ],
 ```
