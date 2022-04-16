@@ -128,7 +128,7 @@ class I2CResponder(I2CResponderBase):
                     # self.trace("g")
                     gc.collect()
                 
-            await uasyncio.sleep_ms(0) 
+                await uasyncio.sleep_ms(0) 
                     
                 
     """ ************************************************
