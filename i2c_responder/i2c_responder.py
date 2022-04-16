@@ -310,10 +310,13 @@ class I2CResponder(I2CResponderBase):
             self.buff_2[0:2] = length.to_bytes(2,sys.byteorder)
             n = await self.snd_bytes(self.buff_2,0,2)
             if n != 2:
+                # didn't send 2 bytes before Controller requested a receive
                 self.trace("sl10")
             
-            # didn't receive 2 bytes before Controller requested a send
-            if (await self.rcv_bytes(self.buff_2,0,2)) != 2:
+            
+            n = await self.rcv_bytes(self.buff_2,0,2)
+            if n != 2:
+                # didn't receive 2 bytes before Controller requested a send
                 self.trace("sl11")
                 self.buff_2[0] = 0x00
                 self.buff_2[1] = 0x00
@@ -330,13 +333,15 @@ class I2CResponder(I2CResponderBase):
                     self.resend_cnt = self.resend_cnt + 1
                     self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_RESEND
                 else:
-                    self.failed_cnt = self.failed_cnt + 1
+                    # only count failed sends if length of message was > 0
+                    if length > 0:
+                        self.failed_cnt = self.failed_cnt + 1
                     self.buff_2[0] = _BLK_MSG_LENGTH_ACK_ERR_CANCEL
             
             # send ack
             self.buff_2[1] = self.buff_2[0]
             n = await self.snd_bytes(self.buff_2,0,2)
-            if n != 2:
+            if n == 0:
                 self.trace("sl13")
 
     # Send a given number of bytes from buff
