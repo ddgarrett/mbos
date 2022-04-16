@@ -52,7 +52,7 @@
         
     {"name":"ir_remote",     "module":"service_ir",     "key_map":"ir_mapping_koobook.json" },
     {"name":"mem_use",       "module":"service_mem_use"   },
-    {"name":"clock",         "module":"service_clock"   },
+    {"name":"clock",         "module":"service_clock"   }
     
  ],
     
