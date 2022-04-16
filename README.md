@@ -124,7 +124,7 @@ This is an experimental prototype created to explore the possibilities of runnin
 - On Responders, if the receiving service is not a named service on the Responder, the message is passed to the Controller.
 - On the Controller, if it does not recognize the receiving service, the message is discarded.
 
-#### Inter-microcontroller Messages
+#### Inter-microcontroller Startup
 
 - When the system starts up, `controller.py` will create up to two I2C objects based on parameters in the JSON file.
     - placed in a `defaults` dictionary available to all services under the names `i2c` and `i2c_1`
@@ -172,3 +172,9 @@ This is an experimental prototype created to explore the possibilities of runnin
     }
   ],
 ```
+
+#### Inter-microcontroller Messages
+
+How messages are wrapped and unwrapped
+
+Details of communicaton of I2C messages with checksums and blocks, etc.?
