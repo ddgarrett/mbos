@@ -34,7 +34,7 @@ The Raspberry Pi Pico probably deserves an OS much better than this, but hey, it
 
 5. Startup the Controller pico by also running the `mbos_boot.py` file that microcontroller.
 
-At this point you should see a display on the LCD. Use the `⏶` and `⏷` keys to scroll up and down through the list of services. When the IR Remote key is accepted you'll see a hourglass symbol, `⌛`, in the bottom right of the LCD.
+At this point you should see a display on the LCD. Use the `⏶` and `⏷` keys to scroll up and down through the list of services. When the IR Remote key is accepted you'll see an hourglass symbol, `⌛`, in the bottom right of the LCD.
 
 ### Wiring
 
@@ -45,18 +45,18 @@ TODO: a Fritzing diagram. Until then, there is a [spreadsheet showing the pins](
 
 This is an experimental prototype created to explore the possibilities of running a dynamically defined system on the pico microcontroller. The startup process involves the following:
 
-1. Run `mboss_boot.py` on the Responder. `mboss_boot.py` loads the JSON file using the `ujson` module. It then starts the python module named in the JSON `main` parameter using `uasyncio.run`. On both the Responder and the Controller, the `main` module is defined by the python module `controller.py` with identical code.
+1. Run `mboss_boot.py` on the Responder. `mboss_boot.py` loads the JSON file using the builtin `ujson` module. It then starts the python module named in the JSON `main` parameter using `uasyncio.run`. On both the Responder and the Controller, the `main` module is defined by the python module `controller.py` with identical code.
 
-2. `controller.py` will startup various services based on the contents of the JSON file `services` parameter.  In detail `controller.py` module will:
-    a.  create up to two I2C objects based on JSON parameters. 
-    b. In the case of the Responder, the I2C objects will include an `I2CResponder` object as defined in `i2c_responder.py`.
-    c. `controller.py` creates and runs objects for each of services included in the JSON `services` list. 
-        - Each entry in the JSON `services` list defines a service including a `name` and `module`. 
+2. `controller.py` will startup various services based on the contents of the JSON file `services` parameter which contains a list of  definitions for the services to be run.  In detail `controller.py` module will:
+
+    a.  create up to two I2C objects based on I2C JSON parameters. 
+    b. `controller.py` creates and runs objects for each of services included in the JSON `services` list. 
+        - Each entry in the JSON `services` list defines a service including at a minimum the `name` and `module`. 
         - The `name` parameter defines a globally unique name or alias for the service. 
         - The `module` parameter is the name of the python module containing the `Service` code. 
         - The  service python module must defines a `class ModuleService(Service)` class which is a subclass of the `Service` class in `service.py`.
         - The `controller.py` loads the module, creates a new instance of `ModuleService` and then creates a `uasyncio` task using the service object `run()` method.
-    f. `controller.py` then goes into a loop calling the `poll_output_queues()` method of the service defined in the JSON `ctrl_svc` parameter once during each loop iteration. In the case of the Responder, the `poll_output_queues()` method is defined in the `service_responder.py` python module.
+    c. `controller.py` then goes into a loop calling the `poll_output_queues()` method of the service defined in the JSON `ctrl_svc` parameter once during each loop iteration. In the case of the Responder, the `poll_output_queues()` method is defined in the `service_responder.py` python module.
 
 2. Run the `mboss_boot.py` on the Controller. Just as on the Responder, this will read the `core_0_services.json` file  and startup the python module named in the JSON `main` parameter using `uasyncio.run`. As previously stated, on both the Responder and the Controller, the `main` module is defined by the python module `controller.py` with identical code with the main differences being in the contents of the JSON file defining the services.
 
