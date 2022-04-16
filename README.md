@@ -36,6 +36,15 @@ The Raspberry Pi Pico probably deserves an OS much better than this, but hey, it
 
 At this point you should see a display on the LCD. Use the `⏶` and `⏷` keys to scroll up and down through the list of services. When the IR Remote key is accepted you'll see an hourglass symbol, `⌛`, in the bottom right of the LCD.
 
+### To Stop
+
+1. Controller must be shut down first or else it will hang
+
+2. Shut down Responders after shutting down the Controller
+
+3. If the Responder is shut down first, run `i2c_test.py` on the Responder. This will run an I2C scan which seems to cause an IO error on the Controller if its I2C connection is hung on a send or receive
+
+
 ### Wiring
 
 TODO: a Fritzing diagram. Until then, there is a [spreadsheet showing the pins](https://docs.google.com/spreadsheets/d/16u3hJGJmb7ypCOZC1THlrIoG0V4-GSELsgmK8cBsw4Q/edit#gid=675858864).
@@ -70,7 +79,34 @@ This is an experimental prototype created to explore the possibilities of runnin
 3. `controller.py` executes the sames steps on the Controller as on the Responder. For the Controller  the`ctrl_svc` will point to a service defined by the python `service_controller.py` module instead of the `service_responder.py` module used on the Responder.
 
 
-#### Poll Output Queues
+#### Interservice Communication
 
-To be continued...
+- Services communicate via `uasyncio` based FIFO queues as defined in the `lib\queue.py` module. 
 
+- Each service has two queues: input and output.
+- Each record in the queue is a class or subclass of type `XmitMsg` as defined in the python module `xmit_message.py`.
+- Records specify:
+    - From: name of service sending the message
+    - To: name of service receving the message
+    - Message: the message being sent. Usually text, list, dictionary or list of dictionaries (key value pairs)
+- The `poll_output_queues()` method called by the `controller` checks the output queues passing each output record to the input queue for the specified service.
+- On Responders, if the receiving service is not a named service on the Responder, the message is passed to the Controller.
+- On the Controller, if it does not recognize the receiving service, the message is discarded.
+
+#### Inter-microcontroller Messages
+
+- When the system starts up, `controller.py` will create up to two I2C objects based on parameters in the JSON file.
+    - placed in a `defaults` dictionary available to all services under the names `i2c` and `i2c_1`
+    - if the parameters for an I2C bus specifies a value for `i2c_responder_addr`, the `controller.py` assumes the I2C bus is for an I2C Responder and creates a new instance of `I2CResponder` as defined in `i2c_responder.py`. 
+    - Otherwise, `controller.py` will create a new I2C instance from the standard `machine.I2C` class
+
+-The Controller `services` JSON parameters defines a service named `i2c_svc` started from the python class `service_i2c_controller.ModuleService`. When the `controller.py` module starts the `run()` method for the `i2c_svc` service it will:
+    1. scan the I2C bus specified by the `i2c_parm` service parameter, which should be `i2c` or `i2c_1`, to obtain the list of Responders. 
+    2. The service parameter `ignore_addr` must contain a list of I2C addresses on that bus which are **not** MBOS Responders. If a non-Responder I2C bus member is not specified this will hang the Controller.
+    3. The `i2c_svc` will then transmit a message to each Responder, which will be directed at the Responder `pnp_svc`, with the message `ext_svc`.
+    4. The Responder `pnp_svc` will then respond to the `ext_svc` message with a list of external services that should be added to the list of services on the Controller. 
+    5. The response message is sent to the xmit `from` service, which will be the Controller service named `controller` (`service_controller.py` based service)
+    6. The Controller `controller` service then adds the services to the list of Controller services after creating a new instance of the service and starting its `run()` method. This means that the source for the python module must exist on the Controller. **TODO**: limit which python modules can be started this way? Currently only `svc_i2c_stub.py` and `svc_test_i2c.py` modules are used to start remote services on the Controller. The `svc_i2c_stub.py` simply forwards a message to the specified Responder based on the Responder address.
+    7. After starting the remote services for the Responder `pnp_svc`, the `controller` service on the Controller sends a second xmit to the `pnp_svc` with the message `ext_menu`. This tells the `pnp_svc` to respond to the Controller `menu` service with a list of service names to be added to the Controller menu.
+    8. The Responder `pnp_svc` service responds with the value of the services `ext_menu` list, which is sent to the `menu` service on the Controller.
+    9. The Controller `menu` service then appends these to the Controller menu, the list of services which are scrolled through via the the `⏶` and `⏷` keys.
