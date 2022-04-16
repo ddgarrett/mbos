@@ -22,15 +22,21 @@ The Raspberry Pi Pico probably deserves an OS much better than this, but hey, it
 ### To Run
 
 1. On the primary (Controller) pico, download:
-    - the  `.py` files in this directory, 
+    - the  micropython `.py` files in this directory, 
     - the `/irx` and `lib` folders, 
-    - the `core_0_services.json`
+    - the `core_0_services.json` file which defines the startup configuration.
 
 2. On the secondary (Responder) pico, download all of the files in `i2c_responder`.
 
 3. Ignore the files in the `i2c_responder_v004.ino` folder. They were originally used for some testing with the Arduino Uno, but are out of date.
 
+4. Startup the Responder pico first, running the `mbos_boot.py` file. 
+
+5. Startup the Controller pico by also running the `mbos_boot.py` file.
+
+At this point you should see a display on the LCD. Use the `⏶` and `⏷` keys to scroll up and down through the list of services. When the IR Remote key is accepted you'll see a hourglass symbol, `⌛`, in the bottom right of the LCD.
+
 ### Wiring
 
-TODO: a Fritzing diagram. Until then, there is a [spreadsheet showing the pins](https://docs.google.com/spreadsheets/d/16u3hJGJmb7ypCOZC1THlrIoG0V4-GSELsgmK8cBsw4Q/edit#gid=675858864). It may be slightly out of date.
+TODO: a Fritzing diagram. Until then, there is a [spreadsheet showing the pins](https://docs.google.com/spreadsheets/d/16u3hJGJmb7ypCOZC1THlrIoG0V4-GSELsgmK8cBsw4Q/edit#gid=675858864).
 
