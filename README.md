@@ -137,11 +137,11 @@ This is an experimental prototype created to explore the possibilities of runnin
     3. The `i2c_svc` will then transmit a message to each Responder, which will be directed at the Responder `pnp_svc`, with the message `ext_svc`.
 
 - The loading of external services then continues as follows:
-    1. The Responder `pnp_svc` will then respond to the `ext_svc` message with a list of external services that should be added to the list of services on the Controller. 
-    5. The response message is sent to the xmit `from` service, which will be the Controller service named `controller` (`service_controller.py` based service)
+    1. The Responder `pnp_svc`, if any, will then respond to the `ext_svc` message with a list of external services that should be added to the list of services on the Controller. 
+    5. The response message is sent to the xmit `from` service, which will be the service named `controller` (`service_controller.py` based service) which runs only on the Controller
     6. The Controller `controller` service then adds the services to the list of Controller services after creating a new instance of the service and starting its `run()` method. This means that the source for the python module must exist on the Controller. **TODO**: limit which python modules can be started this way? Currently only `svc_i2c_stub.py` and `svc_test_i2c.py` modules are used to start remote services on the Controller. The `svc_i2c_stub.py` simply forwards a message to the specified Responder based on the Responder address.
     7. After starting the remote services for the Responder `pnp_svc`, the `controller` service on the Controller sends a second xmit to the `pnp_svc` with the message `ext_menu`. This tells the `pnp_svc` to respond to the Controller `menu` service with a list of service names to be added to the Controller menu.
-    8. The Responder `pnp_svc` service responds with the value of the services `ext_menu` list, which is sent to the `menu` service on the Controller.
+    8. The Responder `pnp_svc` service optionally responds with the value of the services `ext_menu` list, which is sent to the `menu` service on the Controller.
     9. The Controller `menu` service then appends these to the Controller menu, the list of services which are scrolled through via the the `⏶` and `⏷` keys.
 
 ##### Example Responder JSON Services Parm with Plug and Play JSON Parms
@@ -177,4 +177,30 @@ This is an experimental prototype created to explore the possibilities of runnin
 
 How messages are wrapped and unwrapped
 
-Details of communicaton of I2C messages with checksums and blocks, etc.?
+Details of communicaton of I2C messages with checksums and blocks, etc.? See next section.
+
+#### Inter-microcontroller I2C Protocol
+
+Details of how messages are sent via I2C sending first the length of the message, then 16 byte blocks for the message, each block followed by a checksum and acknowledgement.
+
+Also how Controller does control the message exchange. Responders should be ready at any time to send any messages or a zero length message if no messages are available.
+
+Controller pauses roughly 100ms between iterations of sending any messages and polling all Responders for any messages. (Should this be longer?)
+
+Controller also does an `await uasyncio.sleep_ms(0)` call between sending messages to Responders, polling Responders and receiving a message from a Responder.
+
+During startup, the `controller.py` module will start a responder task.
+
+```python
+    resp_addr = get_parm(parms,"i2c_responder_addr",None)
+
+    if resp_addr != None:
+        # we're an I2C Responder
+        i2cr = I2CResponder(bus, sda_gpio=sda, scl_gpio=scl,
+                            responder_address=resp_addr)
+        
+        uasyncio.create_task(i2cr.poll_snd_rcv())
+```
+
+The `I2CRepsonder.create_task()` method then continually checks for the Controller read and write requests, performing a `await uasyncio.sleep_ms(0)` only if there aren't any Controller requests. In other words, it should respond almost immediately when the Controller tries to send or receive data. This seemed to reduce the 
+instance of transmit errors.
