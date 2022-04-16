@@ -100,7 +100,7 @@ This is an experimental prototype created to explore the possibilities of runnin
     - if the parameters for an I2C bus specifies a value for `i2c_responder_addr`, the `controller.py` assumes the I2C bus is for an I2C Responder and creates a new instance of `I2CResponder` as defined in `i2c_responder.py`. 
     - Otherwise, `controller.py` will create a new I2C instance from the standard `machine.I2C` class
 
--The Controller `services` JSON parameters defines a service named `i2c_svc` started from the python class `service_i2c_controller.ModuleService`. When the `controller.py` module starts the `run()` method for the `i2c_svc` service it will:
+-The Controller `services` JSON parameters defines a service named `i2c_svc` started from the python class `service_i2c_controller.ModuleService`. When the `controller.py` module starts the `run()` method for the `i2c_svc` service it will
     1. scan the I2C bus specified by the `i2c_parm` service parameter, which should be `i2c` or `i2c_1`, to obtain the list of Responders. 
     2. The service parameter `ignore_addr` must contain a list of I2C addresses on that bus which are **not** MBOS Responders. If a non-Responder I2C bus member is not specified this will hang the Controller.
     3. The `i2c_svc` will then transmit a message to each Responder, which will be directed at the Responder `pnp_svc`, with the message `ext_svc`.
