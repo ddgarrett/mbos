@@ -103,7 +103,7 @@ class ModuleService(Service):
         
         # send list of services to add to Controller services dictionary
         if "external_services" in self.svc_parms:
-            d = {"external_services" : self.svc_parms["external_services"]}
+            d = {"ext_svc" : self.svc_parms["ext_svc"]}
             xmit = XmitMsg(self.name,self.CTL_SERVICE_NAME, d)
             await self.put_to_output_q(xmit)            
             
@@ -118,7 +118,5 @@ class ModuleService(Service):
         while True:
             # print("r",end="")
             # make sure no messages in my input queue
-            await uasyncio.sleep_ms(3000) 
-            if not q_input.empty():
-                print("found message in Controller input q")
+            await q_input.get()
 
