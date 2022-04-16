@@ -26,7 +26,7 @@ The Raspberry Pi Pico probably deserves an OS much better than this, but hey, it
     - the `/irx` and `lib` folders, 
     - the `core_0_services.json`
 
-2. On the secondary (Responder) pic, download all of the files in `i2c_responder`.
+2. On the secondary (Responder) pico, download all of the files in `i2c_responder`.
 
 
 ### Wiring
