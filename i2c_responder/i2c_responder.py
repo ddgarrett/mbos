@@ -123,6 +123,10 @@ class I2CResponder(I2CResponderBase):
             # before Controller polls again
             if (not self.read_is_pending()
                 and not self.write_data_is_available()):
+                
+                # Not sure this is doing what I want?
+                # To ensure gc.collect() has plenty of time to run before
+                # Controller polls again.
                 if (utime.ticks_ms() - last_poll) < 50:
                     last_poll = last_poll - 100
                     # self.trace("g")
