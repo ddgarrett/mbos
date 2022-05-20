@@ -19,27 +19,39 @@ ws.write()
 
 hf = 0
 
-while True:
+def set_led(h,s,v):
+    h = min(float(h)/100.0,1.0)
+    s = min(float(s)/100.0,1.0)
+    v = min(float(v)/100.0,1.0)
+    
+    r,g,b = hsv_to_rgb.cnv(h,s,v)
+    
+    for j in range(8):
+        # print(j,end=".")
+        utime.sleep_ms(1)
+        #r,g,b = hsv_to_rgb.cnv(hf,s,v)
+        ws[j] = [r,g,b]
+        ws.write()
+
+    
+
+
+while False:
     s = 100
-    v = 100
+    v = 25
     # hf = 0.0
     
     h = input("h: ")
     
-    print("h: '{}' hf: {} ".format(h,hf))
+    # print("h: '{}' hf: {} ".format(h,hf))
     
     if h == "=":
-        hf = hf + .05
-    elif h == "":
-        hf = hf + .01
+        hf = hf + .1
     elif h == "-":
-        hf = hf - .05
+        hf = hf - .1
     else:
         # h = float(h)/360.0
         hf = float(h)/100.0
-        
-    if hf > 1.0:
-        hf = 0
         
     s = float(s)/100.0
     v = float(v)/100.0
