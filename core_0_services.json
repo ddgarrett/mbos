@@ -7,8 +7,8 @@
 "ctrl_svc":"controller",
 
 "defaults": { 
-    "q_in_size":10,
-    "q_out_size":10,
+    "q_in_size":50,
+    "q_out_size":50,
     
     "ir_remote": "ir_remote",  "ir_remote note": "change to input_device?",
     
@@ -30,10 +30,10 @@
     },
 
 "services": [
-    {"name":"controller",    "module":"service_controller",   "q_out_size":10,
-        "startup_focus":"menu",  "menu":"menu" },
+    {"name":"controller",    "module":"service_controller", 
+     "startup_focus":"menu", "menu":"menu" },
          
-    {"name":"menu",          "module":"service_menu",     "initial_app":"temp_humid",  
+    {"name":"menu",          "module":"service_menu", "initial_app":"temp_humid",  
         "menu":[ "temp_humid", "gyro", "mem_use", "clock"]
         },
 
@@ -41,10 +41,9 @@
         
     {"name":"temp_humid",    "module":"service_dht11_v02" },
         
-    {"name":"i2c_svc",       "module":"service_i2c_controller", "q_in_size":50, "q_out_size":50,
+    {"name":"i2c_svc",       "module":"service_i2c_controller",
      "ignore_addr":[104], "i2c_parm":"i2c_1" },
-    
-    
+        
     {"name":"gyro",          "module":"svc_gyro_v01", "adj_x":-4, "i2c_parm":"i2c_1"},
         
     {"name":"log",           "module":"service_print",  "q_in_size":100,  "print_log":1,
