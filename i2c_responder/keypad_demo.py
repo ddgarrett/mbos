@@ -21,25 +21,23 @@ col_pins = [Pin(pin_name, mode=Pin.IN, pull=Pin.PULL_DOWN) for pin_name in cols]
 
 def init():
     for row in range(0,4):
-        for col in range(0,4):
-            row_pins[row].low()
+        # for col in range(0,4):
+        row_pins[row].low()
 
-def scan(row, col):
-    """ scan the keypad """
+# return first key down found,
+# or None if no key down
+def scan():
+    for row in range(4):
+        row_pins[row].high()
+        for col in range(4):
+            if col_pins[col].value() == KEY_DOWN:
+                row_pins[row].low()
+                return keys[row][col]
 
-    # set the current column to high
-    row_pins[row].high()
-    key = None
+        # reset row pin
+        row_pins[row].low()
 
-    # check for keypressed events
-    if col_pins[col].value() == KEY_DOWN:
-        key = KEY_DOWN
-    if col_pins[col].value() == KEY_UP:
-        key = KEY_UP
-    row_pins[row].low()
-
-    # return the key state
-    return key
+    return None
 
 print("starting")
 
@@ -53,23 +51,19 @@ last_key_cnt = 0
 
 while True:
     
-    found_key = False
-    for row in range(4):
-        for col in range(4):
-            key = scan(row, col)
-            if key == KEY_DOWN:
-                found_key = True
-                key_press = keys[row][col]
-                if key_press != last_key:
-                    last_key = key_press
-                    last_key_cnt = 1
-                else:
-                    last_key_cnt = last_key_cnt + 1
-                    if last_key_cnt == 2:
-                        print("Key Pressed", key_press)
-
-    if not found_key and last_key != None:
+    key = scan()
+    if key != None:
+        if key != last_key:
+            last_key = key
+            last_key_cnt = 1
+        # ensure key pressed for 2 cycles
+        elif last_key_cnt == 1:
+            last_key_cnt = 2
+            print("Key Pressed", key)
+            
+    else:
         last_key = None
+            
                 
     time.sleep_ms(100)
     
