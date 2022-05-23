@@ -53,7 +53,7 @@ class I2CResponder(I2CResponderBase):
         super().__init__(i2c_device_id=i2c_device_id, sda_gpio=sda_gpio,
                          scl_gpio=scl_gpio, responder_address=responder_address)
         
-        self.buff = bytearray(1024)
+        self.buff = bytearray(4096)
         self.buff_2 = bytearray(2)
         self.q_in = queue.Queue(q_in_size)
         self.q_out = queue.Queue(q_out_size)

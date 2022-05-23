@@ -55,7 +55,7 @@ class I2cController:
             
         self.buff_2  = bytearray(2)
         self.buff_16 = bytearray(16)
-        self.buff    = bytearray(1024)
+        self.buff    = bytearray(4096)
         
         self.send_cnt   = 0
         self.rcv_cnt    = 0
