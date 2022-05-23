@@ -1,6 +1,7 @@
 import machine
 import utime
-import math
+import sys
+# import math
 from ws2812 import WS2812
 
 import hsv_to_rgb
@@ -19,6 +20,17 @@ ws.write()
 
 hf = 0
 
+def blank_lcd():
+    ws[0] = [0,0,0]
+    ws[1] = [0,0,0]
+    ws[2] = [0,0,0]
+    ws[3] = [0,0,0]
+    ws[4] = [0,0,0]
+    ws[5] = [0,0,0]
+    ws[6] = [0,0,0]
+    ws[7] = [0,0,0]
+    ws.write()
+    
 while True:
     s = 100
     v = 100
@@ -35,8 +47,13 @@ while True:
     elif h == "-":
         hf = hf - .05
     else:
-        # h = float(h)/360.0
-        hf = float(h)/100.0
+        try:
+            # h = float(h)/360.0
+            hf = float(h)/100.0
+        except ValueError:
+            blank_lcd()
+            sys.exit(0)
+            
         
     if hf > 1.0:
         hf = 0
