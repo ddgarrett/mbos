@@ -44,8 +44,8 @@ class ModuleService(Service):
         controller = self.get_parm("i2c_interface",None)
         self.send_cnt += 1
         
-        xmit = xmit_lcd.XmitLcd(fr=self.name)
-        xmit.set_cursor(2,2).set_msg(str(self.send_cnt))
+        xmit = xmit_lcd.XmitLcd(fr=self.name).blk_hg()
+        xmit.set_cursor(2,2).set_msg(str(self.send_cnt)) 
         await self.put_to_output_q(xmit)
 
         # send a quick burst of 10 messages
@@ -56,7 +56,7 @@ class ModuleService(Service):
             m = "s{} r{} x{} f{}".format(controller.send_cnt,
                 controller.rcv_cnt, controller.resend_cnt, controller.failed_cnt )
 
-            xmit = xmit_lcd.XmitLcd(fr=self.name)            
+            xmit = xmit_lcd.XmitLcd(fr=self.name)         
             xmit.set_cursor(0,3).set_msg(m)
             await self.put_to_output_q(xmit)
         
