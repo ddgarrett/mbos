@@ -54,17 +54,22 @@ class ModuleService(Service):
         await super().lose_focus()
         
     async def write_rgb(self,r,g,b):
-        for j in range(8):
+        for j in range(7, -1, -1):
             await uasyncio.sleep_ms(1)
             self.ws[j] = [r,g,b]
             self.ws.write()
             
     async def write_hsv(self):        
         
-        h = self.h
+        h = 0.0
+        incr = self.incr
         
         while True:
-            h = h + self.incr
+            if incr != self.incr:
+                h = 0.0
+                incr = self.incr
+                
+            h = h + incr
             while h < 0: 
                 h = h + 1
             while h > 1:
@@ -84,18 +89,28 @@ class ModuleService(Service):
                 
             await uasyncio.sleep_ms(self.wait)
         
+    # Update display
     async def display_iwv(self):
-        incr = int(round(self.incr*100,0))
-        wait = self.wait
-        hv = int(round(self.v*100,0))
-        xmit = xmit_lcd.XmitLcd(fr=self.name).clear_screen()
-        xmit.set_msg("⏶ i:{} w:{} v:{} \n⏷ {}".format(incr,wait,hv,self.buff))
+        xmit = xmit_lcd.XmitLcd(fr=self.name).blk_hg() # blank out hourglass
+        dat = self.fmt_dsp_dat()
+        for i in range(len(dat)):
+            xmit.set_cursor(14,i).set_msg("{}  ".format(dat[i]))
         await self.put_to_output_q(xmit)
         
     # Initialize the LCD display
     async def init_display(self):
-        await self.display_iwv()
-        # await self.write_hsv()
+        xmit = xmit_lcd.XmitLcd(fr=self.name).clear_screen()
+        dat = self.fmt_dsp_dat()
+        xmit.set_msg("⏶ incr(ok,a): {} \n⏷ wait(*)   : {} \n  value(#)  : {} \n  buff      : {}".
+                     format(*dat))
+        await self.put_to_output_q(xmit)
+        
+    # calculate display values
+    def fmt_dsp_dat(self):
+        incr = int(round(self.incr*100,0))
+        wait = self.wait
+        hv = int(round(self.v*100,0))
+        return [incr,wait,hv,self.buff]
         
     # increment/decrent increment, wait or v
     def incr_incr(self,incr):
@@ -116,7 +131,7 @@ class ModuleService(Service):
         update_led = True
         
         if msg == utf8_char.KEY_REVERSE_BACK:        # decrement last set var
-            print("reverse back")
+            # print("reverse back")
             self.incr_val(-1)
             self.buff = ""
             

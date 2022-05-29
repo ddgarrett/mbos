@@ -78,7 +78,10 @@ class ModuleService(Service):
         h = self.h
         
         while True:
-            h = h + .05
+            #h = h + .05
+        
+            h = self.h
+            
             if h < 0: # (self.h + 8*.05):
                 h = 1
                 
@@ -91,21 +94,31 @@ class ModuleService(Service):
                 r,g,b = hsv_to_rgb.cnv(hp,self.s,self.v)
                 self.ws[7-j] = [r,g,b]
                 self.ws.write()
-                
-            await uasyncio.sleep_ms(10)
+                    
+            await uasyncio.sleep_ms(100)
         
+    # Update display
     async def display_hsv(self):
-        hp = int(round(self.h*100,0))
-        hs = int(round(self.s*100,0))
-        hv = int(round(self.v*100,0))
-        xmit = xmit_lcd.XmitLcd(fr=self.name).clear_screen()
-        xmit.set_msg("⏶ h:{} s:{} v:{} \n⏷ {}".format(hp,hs,hv,self.buff))
+        xmit = xmit_lcd.XmitLcd(fr=self.name).blk_hg()
+        dat = self.fmt_dsp_dat()
+        for i in range(len(dat)):
+            xmit.set_cursor(13,i).set_msg("{}  ".format(dat[i]))
         await self.put_to_output_q(xmit)
         
     # Initialize the LCD display
     async def init_display(self):
-        await self.display_hsv()
-        # await self.write_hsv()
+        dat = self.fmt_dsp_dat()
+        xmit = xmit_lcd.XmitLcd(fr=self.name).clear_screen()
+        xmit.set_msg("⏶ hue(ok,a): {} \n⏷ sat(*)   : {} \n  val(#)   : {} \n  buf      : {}".
+                     format(*dat))
+        await self.put_to_output_q(xmit)
+        
+    # calculate display values
+    def fmt_dsp_dat(self):
+        hp = int(round(self.h*100,0))
+        hs = int(round(self.s*100,0))
+        hv = int(round(self.v*100,0))
+        return [hp,hs,hv,self.buff]
         
     # increment/decrent h,s or v
     def incr_h(self,incr):
@@ -126,7 +139,7 @@ class ModuleService(Service):
         update_led = True
         
         if msg == utf8_char.KEY_REVERSE_BACK:        # decrement last set var
-            print("reverse back")
+            # print("reverse back")
             self.incr_val(-0.05)
             self.buff = ""
             
