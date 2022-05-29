@@ -11,7 +11,9 @@ import uasyncio
 import ujson
 import utime
 import xmit_lcd
-from ir_rx.nec import NEC_16
+from ir_rx.nec import NEC_8
+# from ir_rx.print_error import print_error  # Optional print of error codes
+from ir_rx import IR_RX
 from machine import Pin
 
 # from xmit_ir_remote import XmitIrRemote
@@ -36,8 +38,21 @@ class ModuleService(Service):
         super().__init__(svc_parms)
 
         p = Pin(17, Pin.IN)
-        self.ir_sensor = NEC_16(p,sensor_callback)
-        # self.ir_sensor.error_function(sensor_error)
+        self.ir_sensor = NEC_8(p,sensor_callback)
+        # self.ir_sensor.error_function(print_error)
+
+        self.e_cnt = {
+           IR_RX.BADSTART : 0, IR_RX.BADBLOCK : 0, IR_RX.BADREP  : 0,
+           IR_RX.OVERRUN  : 0, IR_RX.BADDATA  : 0, IR_RX.BADADDR : 0,
+           0 : 0}
+        
+        self.e_msg = {
+           IR_RX.BADSTART : "BS", IR_RX.BADBLOCK : "BB", IR_RX.BADREP  : "BR",
+           IR_RX.OVERRUN  : "OR", IR_RX.BADDATA  : "BD", IR_RX.BADADDR : "BA",
+           0 : "OT"}
+
+        
+        # self.ir_sensor.error_function(self.count_err)
          
         self.data = None
         self.lcd_on = 1
@@ -50,18 +65,29 @@ class ModuleService(Service):
             self.key_mapping = ujson.load(f)["hex_utf8_map"]
             # print(self.key_mapping)
 
-    async def run(self):
-        q_input = self.get_input_queue()
+    def count_err(self,data):
+        if data in self.e_cnt:
+            self.e_cnt[data] = self.e_cnt[data] + 1
+            # print(self.e_msg[data],end=" ")
+        else:
+            self.e_cnt[0] = self.e_cnt[0] + 1
+            # print(self.e_msg[0],end=" ")
+            
+        # print(data,end=" ")
+        # print(self.e_cnt)
         
+    
+    async def run(self):
+        self.run_check_task = uasyncio.create_task(self.check_ir_data())
+        await super().run()
+             
+    # check to see if there is any IR data
+    # if so, send the key
+    async def check_ir_data(self):
         ts = utime.ticks_ms()
         
         while True:
 
-            # Don't expect any input messages, so
-            # throw away all q_input messages.
-            while not q_input.empty():
-                xmit_msg = await q_input.get()
-                
             if (self.data != None
             and utime.ticks_diff(utime.ticks_ms(), ts) > 10):
                 ts = utime.ticks_ms()
@@ -69,7 +95,8 @@ class ModuleService(Service):
                 self.data = None
                 
             await uasyncio.sleep_ms(10)
-             
+
+        
     # send a key to the focus service
     async def send_key(self, key):
         # print('Data {:02x} Addr {:04x} Ctrl {:02x}'.format(data, addr, ctrl))
@@ -80,7 +107,10 @@ class ModuleService(Service):
             # show hourglass to provide user feedback - character received
             xmit = xmit_lcd.XmitLcd(fr=self.name)
             xmit.dsp_hg()
-            await self.put_to_output_q(xmit)           
+            await self.put_to_output_q(xmit)
+            
+            # sound buzzer
+            await self.send_msg("buzzer", "")
             
             # now send the character to "focus" service
             value = self.key_mapping[key_str]
