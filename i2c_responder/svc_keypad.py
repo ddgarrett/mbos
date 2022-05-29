@@ -83,7 +83,10 @@ class ModuleService(Service):
         # show hourglass to provide user feedback - character received
         xmit = xmit_lcd.XmitLcd(fr="ir_remote")
         xmit.dsp_hg()
-        await self.put_to_output_q(xmit)           
+        await self.put_to_output_q(xmit)
+        
+        # sound buzzer
+        await self.send_msg("buzzer", "")
         
         # now send the character to "focus" service
         xmit = XmitMsg("ir_remote","focus",key)
