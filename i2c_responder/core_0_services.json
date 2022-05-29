@@ -11,9 +11,10 @@
 
 "defaults": { 
     "log_svc"   :"0x41_log",
+    "_sound_on"  : false,
     
-    "q_in_size":10,
-    "q_out_size":10,
+    "q_in_size":50,
+    "q_out_size":50,
     
     "ir_remote": "ir_remote",    "ir_remote note": "change to input_device?",
     
@@ -30,26 +31,27 @@
     },
 
 "services": [
-    {"name":"0x41_log",      "module":"service_print",      "q_in_size":1000,  "print_log":1 },
+    {"name":"0x41_log",     "module":"service_print",      "q_in_size":1000,  "print_log":1 },
+    {"name":"0x41_keypad",  "module":"svc_keypad" },
         
-    {"name":"0x41_mem_use",  "module":"service_mem_use" },
-    
     {"name":"i2c_svc",       "module":"svc_i2c_responder",  "q_in_size":1000,  "print_log":1 },
     
-    {"name":"0x41_test_i2c", "module":"svc_test_i2c",       "send_to":"log" },
- 
-    {"name":"0x41_ctrl",     "module":"service_responder",  "q_out_size":50, "i2c_svc":"i2c_svc" },
+    {"name":"0x41_ctrl",     "module":"service_responder",  "i2c_svc":"i2c_svc" },
+    
+    {"name":"0x41_neopixel_v2", "module":"svc_neopixel_v2" },
+    {"name":"0x41_temp_humid",  "module":"service_dht11_v02" },
+    {"name":"buzzer",           "module":"svc_buzz" },
     
     {"name":"pnp_svc",       "module":"svc_pnp",            "q_out_size":50, "i2c_svc":"i2c_svc",
      "ext_svc":[
             {"name":"0x41_log",      "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
-            {"name":"0x41_mem_use",  "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
-            {"name":"0x41_test_i2c", "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
-            {"name":"test_i2c_0x41", "module":"svc_test_i2c",   "send_to":"0x41_log" }
+            {"name":"0x41_neopixel_v2", "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"0x41_temp_humid",  "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"buzzer",           "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
 
         ],
         
-      "ext_menu":["0x41_mem_use","test_i2c_0x41", "0x41_test_i2c" ]
+      "ext_menu":["0x41_neopixel_v2","0x41_temp_humid" ]
       
     }
     
@@ -58,12 +60,23 @@
   
  "save":[
          "ext_svc":[
-            {"name":"0x41_log",     "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
-            {"name":"0x41_mem_use", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" }
+            {"name":"0x41_test_i2c", "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" }
+            {"name":"0x41_mem_use",  "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"test_i2c_0x41", "module":"svc_test_i2c",   "send_to":"0x41_log" },
+            {"name":"0x41_test_i2c", "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
+            {"name":"0x41_neopixel",    "module":"svc_neopixel" },
+
 
         ],
         
-        "ext_menu":["0x41_mem_use"]
+        "ext_menu":["0x41_test_i2c","0x41_mem_use","test_i2c_0x41", "0x41_test_i2c"]
+ ],
+ 
+ "currently_unused_services": [
+     {"name":"0x41_mem_use",  "module":"service_mem_use" },
+     {"name":"0x41_test_i2c", "module":"svc_test_i2c",       "send_to":"log" }
+ 
+
  ]
     
 

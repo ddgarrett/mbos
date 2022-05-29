@@ -33,25 +33,22 @@
     {"name":"controller",    "module":"service_controller", 
      "startup_focus":"menu", "menu":"menu" },
          
-    {"name":"menu",          "module":"service_menu", "initial_app":"temp_humid",  
-        "menu":[ "temp_humid", "gyro", "mem_use", "clock"]
+    {"name":"menu",          "module":"service_menu", "initial_app":"test_i2c",  
+        "menu":[ "test_i2c"]
         },
 
     {"name":"lcd",           "module":"service_lcd_v02",  "custom_char":"°⏴⏵⏶⏷⌛" },
         
-    {"name":"temp_humid",    "module":"service_dht11_v02" },
-        
     {"name":"i2c_svc",       "module":"service_i2c_controller",
      "ignore_addr":[104], "i2c_parm":"i2c_1" },
-        
-    {"name":"gyro",          "module":"svc_gyro_v01", "adj_x":-4, "i2c_parm":"i2c_1"},
         
     {"name":"log",           "module":"service_print",  "q_in_size":100,  "print_log":1,
       "todo": "make a log to disk version, or have that as an option?" },
         
     {"name":"ir_remote",     "module":"service_ir",     "key_map":"ir_mapping_koobook.json" },
-    {"name":"mem_use",       "module":"service_mem_use"   },
-    {"name":"clock",         "module":"service_clock"   }
+    
+    {"name":"test_i2c",      "module":"svc_test_i2c",   "send_to":"0x41_log" }
+
     
  ],
     
@@ -63,12 +60,18 @@
     
     {"name":"timer",      "module":"service_timer"   }, 
     {"name":"clock",      "module":"service_clock"   },
+    {"name":"mem_use",       "module":"service_mem_use"   },
+    {"name":"gyro",          "module":"svc_gyro_v01", "adj_x":-4, "i2c_parm":"i2c_1"},
+
 
     {"name":"0x41_log",   "module":"svc_i2c_stub",   "forward_i2c_addr":"0x41" },
     
     {"name":"0x41_mem_use", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" },
     {"name":"0x41_test_i2c", "module":"svc_i2c_stub", "forward_i2c_addr":"0x41" },
-    {"name":"test_i2c",      "module":"svc_test_i2c", "send_to":"0x41_log" }
+    {"name":"test_i2c",      "module":"svc_test_i2c", "send_to":"0x41_log" },
+    
+    {"name":"temp_humid",    "module":"service_dht11_v02" }
+    
 
     ]
 }
