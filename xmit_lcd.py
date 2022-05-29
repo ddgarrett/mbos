@@ -26,6 +26,7 @@ CMD_DISPLAY_ON  = 'display_on'
 CMD_DISPLAY_OFF = 'display_off'
 
 CMD_DSP_HG      = 'hg'  # display hourglass ⌛
+CMD_BLK_HG      = 'bg'  # blank out hourglass
 
 
 
@@ -119,6 +120,11 @@ class XmitLcd(XmitMsg):
     # display an hourglass for 2 seconds
     def dsp_hg(self):
         self.msg.append({CMD_DSP_HG:2})
+        
+    # blank out the hourglass
+    def blk_hg(self):
+        self.msg.append(CMD_BLK_HG)
+        return self
         
             
         
