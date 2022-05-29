@@ -89,7 +89,9 @@ class ModuleService(Service):
             xmit_lcd.CMD_BACKLIGHT_OFF : self.lcd.backlight_off,
 
             xmit_lcd.CMD_DISPLAY_ON  : self.lcd.display_on,
-            xmit_lcd.CMD_DISPLAY_OFF : self.lcd.display_off
+            xmit_lcd.CMD_DISPLAY_OFF : self.lcd.display_off,
+            
+            xmit_lcd.CMD_BLK_HG      : self.blank_hourglass
         }
         
     # run forever, but only blink backlight if
@@ -215,6 +217,14 @@ class ModuleService(Service):
         if self.hg_task_cnt == 0:
             self.set_cursor([col,row])
             self.lcd.putstr(" ")
+            
+    def blank_hourglass(self):
+        row = self.lcd_row_cnt-1
+        col = self.lcd_col_cnt-1
+        
+        self.set_cursor([col,row])
+        self.lcd.putstr(" ")
+
         
 
         
