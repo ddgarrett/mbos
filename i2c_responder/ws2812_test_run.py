@@ -3,6 +3,7 @@ import utime
 import sys
 # import math
 from ws2812 import WS2812
+import random
 
 import hsv_to_rgb
 
@@ -31,12 +32,16 @@ def blank_lcd():
     ws[7] = [0,0,0]
     ws.write()
     
+v_begin = 50
+h = 24
 while True:
     s = 100
-    v = 100
+    v = v_begin
     # hf = 0.0
     
-    h = input("h: ")
+    # h = input("h: ")
+    # h = random.randint(0, 100)
+
     
     print("h: '{}' hf: {} ".format(h,hf))
     
@@ -83,6 +88,26 @@ while True:
         ws.write()
         
     print("")
+    
+    utime.sleep_ms(3000)
+    for i in range(v_begin,-1,-1):
+        # s = float(s)/100.0
+        v = float(i)/100.0
+        if v < 0:
+            v = 0
+            
+        utime.sleep_ms(v_begin-i)
+        print(hf,s,v)
+        print(hsv_to_rgb.cnv(hf,s,v))
+    
+        for j in range(8):
+            # print(j,end=".")
+            utime.sleep_ms(1)
+            r,g,b = hsv_to_rgb.cnv(hf,s,v)
+            ws[j] = [r,g,b]
+            ws.write()
+        
+    utime.sleep_ms(1500)
 
 
 
